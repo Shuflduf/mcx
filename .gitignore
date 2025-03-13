@@ -10,7 +10,8 @@ target/
 *.pdb
 
 # IDE BS GOES HERE
-#.idea/
+.idea/
 .idx/
+.vscode/
 
 /target
