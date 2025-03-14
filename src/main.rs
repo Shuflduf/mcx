@@ -20,22 +20,22 @@ enum Commands {
     Run,
 }
 
+const LOADERS: [&str; 2] = ["Vanilla", "NeoForge"];
+
 async fn init_server() {
     let name = Text::new("Server Name: ").prompt().unwrap();
-    let version = Select::new("Minecraft Version: ", versions::get_versions())
+    let loader = Select::new("Loader: ", LOADERS.to_vec())
         .prompt()
         .unwrap();
-    let loader = Select::new(
-        "Loader: ",
-        vec!["Vanilla", "Fabric", "Forge", "NeoForge", "Quilt"],
-    )
+
+    let version = Select::new("Minecraft Version: ", versions::get_loader_versions(loader))
         .prompt()
         .unwrap();
 
     if let Err(e) = fs::create_dir(&name) {
         println!("Error creating directory: {}", e);
     }
-    if let Err(e) = versions::download_version(&version, &name).await {
+    if let Err(e) = versions::download_version(&version, &name, loader).await {
         println!("Error downloading version: {}", e);
     }
     println!("Creating MCLI configuration");
