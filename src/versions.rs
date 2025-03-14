@@ -47,9 +47,9 @@ pub async fn download_version(version: &str, path: &str) -> Result<(), DownloadE
         .as_str()
         .ok_or_else(|| DownloadError::InvalidMetadata("metadata URL not found".to_string()))?;
     
-    println!("Downloading metadata from: {metadata_url}");
     
     // Download and parse metadata
+    println!("Downloading version info from: {metadata_url}");
     let metadata = reqwest::get(metadata_url)
         .await?
         .text()
@@ -62,6 +62,7 @@ pub async fn download_version(version: &str, path: &str) -> Result<(), DownloadE
         .as_str()
         .ok_or_else(|| DownloadError::InvalidMetadata("jar URL not found in metadata".to_string()))?;
     
+    println!("Downloading server jar from: {jar_url}");
     let jar = reqwest::get(jar_url)
         .await?
         .bytes()
