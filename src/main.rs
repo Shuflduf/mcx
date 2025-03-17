@@ -20,15 +20,15 @@ enum Commands {
     Run,
 }
 
-const LOADERS: [&str; 2] = ["Vanilla", "NeoForge"];
 
 async fn init_server() {
+    let loaders = vec!["Vanilla", "NeoForge"];
     let name = Text::new("Server Name: ").prompt().unwrap();
-    let loader = Select::new("Loader: ", LOADERS.to_vec())
+    let loader = Select::new("Loader: ", loaders)
         .prompt()
         .unwrap();
 
-    let version = Select::new("Minecraft Version: ", versions::get_loader_versions(loader))
+    let version = Select::new("Minecraft Version: ", versions::get_loader_versions(loader).await)
         .prompt()
         .unwrap();
 
@@ -37,6 +37,7 @@ async fn init_server() {
     }
     if let Err(e) = versions::download_version(&version, &name, loader).await {
         println!("Error downloading version: {}", e);
+        return;
     }
     println!("Creating MCLI configuration");
     fs::write(

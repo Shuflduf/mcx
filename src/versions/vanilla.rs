@@ -6,17 +6,19 @@ use super::Loader;
 pub struct Vanilla;
 
 impl Loader for Vanilla {
-    fn get_versions() -> Vec<String> {
+    async fn get_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> {
         let file_data = read_to_string("src/versions.json").unwrap();
         let json_data: Value = serde_json::from_str(&file_data).unwrap();
 
-        json_data["versions"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .filter(|v| v["type"].as_str().unwrap() == "release")
-            .map(|v| v["id"].as_str().unwrap().to_string())
-            .collect()
+        Ok(
+            json_data["versions"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|v| v["type"].as_str().unwrap() == "release")
+                .map(|v| v["id"].as_str().unwrap().to_string())
+                .collect()
+        )
     }
 
     async fn download(&self, version: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {

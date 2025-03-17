@@ -21,7 +21,7 @@ pub enum DownloadError {
 }
 
 pub trait Loader {
-    fn get_versions() -> Vec<String>;
+    async fn get_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> ;
 
     async fn download(&self, version: &str, path: &str) -> Result<(), Box<dyn std::error::Error>>;
 }
@@ -38,10 +38,10 @@ pub async fn download_version(version: &str, path: &str, loader: &str) -> Result
     }
 }
 
-pub fn get_loader_versions(loader: &str) -> Vec<String> {
+pub async fn get_loader_versions(loader: &str) -> Vec<String> {
     match loader {
-        "Vanilla" => Vanilla::get_versions(),
-        "NeoForge" => Neoforge::get_versions(),
+        "Vanilla" => Vanilla::get_versions().await.unwrap(),
+        "NeoForge" => Neoforge::get_versions().await.unwrap(),
         _ => Vec::new(),
     }
 }
