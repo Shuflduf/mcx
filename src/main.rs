@@ -1,25 +1,43 @@
 use std::fs;
-
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use inquire::{Select, Text};
 
 mod versions;
 mod run;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(author = "Shuflduf")]
+#[command(version = "1.0")]
+#[command(about = "Command Line Interface to create and manage Minecraft servers")]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Initialize a new Minecraft server
     Init,
+    /// Run the Minecraft server
     Run,
+    /// Manage mods for your Minecraft server
+    Mod {
+        #[command(subcommand)]
+        command: Option<ModSubcommand>,
+    },
 }
 
+#[derive(Subcommand, Clone)]
+enum ModSubcommand {
+    /// Add a new mod to the server
+    Add {
+        /// The token or identifier of the mod to add.
+        /// This can be a URL, or if the mod is on Modrinth, the mod ID (e.g. "fabric-api")
+        token: String,
+    },
+    /// List all installed mods
+    List,
+}
 
 async fn init_server() {
     let loaders = vec!["Vanilla", "NeoForge"];
@@ -43,25 +61,46 @@ async fn init_server() {
     fs::write(
         format!("{}/mcli.toml", name),
         format!(
-r#"[server]
+            r#"[server]
 name = "{name}"
 version = "{version}"
 loader = "{loader}"
 "#,
-            name = name,
-            version = version,
-            loader = loader
         ),
     ).expect("Error writing configuration file");
+}
+
+async fn add_mod(token: String) {
+    println!("Adding mod: {}", token);
+}
+
+async fn list_mods() {
+    println!("Listing mods...");
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
-    match &cli.command {
-        Commands::Init => init_server().await,
-        Commands::Run => run::start_server(),
+    match cli.command {
+        Some(Commands::Init) => init_server().await,
+        Some(Commands::Run) => run::start_server(),
+        Some(Commands::Mod { command }) => match command {
+            Some(ModSubcommand::Add { token }) => add_mod(token).await,
+            Some(ModSubcommand::List) => list_mods().await,
+            None => {
+                // When no subcommand is provided for 'mod', show help
+                let mut cmd = Cli::command();
+                if let Some(mod_cmd) = cmd.find_subcommand_mut("mod") {
+                    mod_cmd.print_help().unwrap();
+                }
+            }
+        },
+        None => {
+            // When no command is provided at all, show main help
+            let mut cmd = Cli::command();
+            cmd.print_help().unwrap();
+        }
     }
 
     Ok(())
