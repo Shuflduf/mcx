@@ -60,11 +60,21 @@ impl Loader for Vanilla {
             .await?;
 
         // Save jar file
-        let mut file = File::create(format!("{}/{}.jar", path, version))?;
+        let mut file = File::create(format!("{}/server.jar", path))?;
         file.write_all(&jar)?;
 
         println!("Successfully downloaded version {}", version);
         Ok(())
+    }
+
+    fn run() {
+        let _ = std::process::Command::new("java")
+            .arg("-jar")
+            .arg("server.jar")
+            .arg("nogui")
+            .spawn()
+            .expect("Error starting server")
+            .wait();
     }
 }
 

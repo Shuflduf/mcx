@@ -1,4 +1,7 @@
-use std::{fs, process::Command};
+use std::fs;
+
+use crate::versions::{Neoforge, Vanilla};
+use crate::versions::Loader;
 
 pub fn start_server() {
     if fs::exists("mcli.toml").expect("Error checking for configuration file") {
@@ -11,13 +14,24 @@ pub fn start_server() {
 
         println!("Starting server {} ({} - {})", name, version, loader);
 
-        let _ = Command::new("java")
-            .arg("-jar")
-            .arg(format!("{}.jar", version))
-            .arg("nogui")
-            .spawn()
-            .expect("Error starting server")
-            .wait();
+        match loader {
+            "Vanilla" => {
+                Vanilla::run();
+            }
+            "NeoForge" => {
+                Neoforge::run();
+            }
+            _ => {
+                println!("Invalid loader: {}", loader);
+            }
+        }
+        //let _ = Command::new("java")
+        //    .arg("-jar")
+        //    .arg(format!("{}.jar", version))
+        //    .arg("nogui")
+        //    .spawn()
+        //    .expect("Error starting server")
+        //    .wait();
     } else {
         println!("No configuration file found. Run `mcli init` to create a server profile.");
     }

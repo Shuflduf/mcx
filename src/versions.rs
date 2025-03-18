@@ -24,6 +24,8 @@ pub trait Loader {
     async fn get_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> ;
 
     async fn download(&self, version: &str, path: &str) -> Result<(), Box<dyn std::error::Error>>;
+
+    fn run();
 }
 
 pub async fn download_version(version: &str, path: &str, loader: &str) -> Result<(), DownloadError> {
