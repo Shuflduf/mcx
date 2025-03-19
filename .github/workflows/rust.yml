@@ -18,8 +18,7 @@ jobs:
       matrix:
         BUILD_TARGET: [release] # refers to a cargo profile
         
-    permissions:
-      contents: write
+    permissions: write-all
     
     steps:
       - uses: actions/checkout@v4
