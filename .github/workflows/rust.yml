@@ -13,18 +13,23 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        BUILD_TARGET: [release] # refers to a cargo profile 
-        
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        target: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-msvc]
+
     permissions: write-all
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Temporarily modify the rust toolchain version
-        run: rustup override set nightly
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: ${{ matrix.target }}
+          override: true
 
       - name: Output rust version for educational purposes
         run: rustup --version
@@ -47,7 +52,7 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mcx
+          name: mcx-${{ matrix.os }}-${{ matrix.target }}
           path: target/release/mcx
 
   release:
@@ -57,13 +62,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
   
-      - name: Download release artifact
+      - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: mcx
+          name: |
+            mcx-ubuntu-latest-x86_64-unknown-linux-gnu,
+            mcx-macos-latest-x86_64-apple-darwin,
+            mcx-windows-latest-x86_64-pc-windows-msvc
           path: ./mcx
   
-      - name: Publish built binary to GitHub releases
+      - name: Publish built binaries to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${GITHUB_REF##*/} --generate-notes ./mcx/mcx#mcx
+        run: |
+          gh release create ${GITHUB_REF##*/} --generate-notes \
+            ./mcx/mcx-ubuntu-latest-x86_64-unknown-linux-gnu/mcx#mcx-linux \
+            ./mcx/mcx-macos-latest-x86_64-apple-darwin/mcx#mcx-macos \
+            ./mcx/mcx-windows-latest-x86_64-pc-windows-msvc/mcx.exe#mcx-windows
