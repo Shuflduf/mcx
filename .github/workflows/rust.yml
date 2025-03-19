@@ -65,17 +65,26 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: |
-            mcx-ubuntu-latest-x86_64-unknown-linux-gnu,
-            mcx-macos-latest-x86_64-apple-darwin,
-            mcx-windows-latest-x86_64-pc-windows-msvc
-          path: ./mcx
+          name: mcx-ubuntu-latest-x86_64-unknown-linux-gnu
+        continue-on-error: true
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mcx-macos-latest-x86_64-apple-darwin
+        continue-on-error: true
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mcx-windows-latest-x86_64-pc-windows-msvc
+        continue-on-error: true
   
       - name: Publish built binaries to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${GITHUB_REF##*/} --generate-notes \
-            ./mcx/mcx-ubuntu-latest-x86_64-unknown-linux-gnu/mcx#mcx-linux \
-            ./mcx/mcx-macos-latest-x86_64-apple-darwin/mcx#mcx-macos \
-            ./mcx/mcx-windows-latest-x86_64-pc-windows-msvc/mcx.exe#mcx-windows
+            ./mcx-ubuntu-latest-x86_64-unknown-linux-gnu/mcx#mcx-linux \
+            ./mcx-macos-latest-x86_64-apple-darwin/mcx#mcx-macos \
+            ./mcx-windows-latest-x86_64-pc-windows-msvc/mcx.exe#mcx-windows
