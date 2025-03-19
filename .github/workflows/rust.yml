@@ -1,0 +1,67 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        BUILD_TARGET: [release] # refers to a cargo profile
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Temporarily modify the rust toolchain version
+        run: rustup override set nightly
+
+      - name: Output rust version for educational purposes
+        run: rustup --version
+  
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  
+      - name: Build
+        run: cargo build --release --verbose
+
+      - name: Run tests
+        run: cargo test --release --verbose
+  
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcx
+          path: target/release/mcx
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mcx
+          path: ./mcx
+
+      - name: Publish built binary to GitHub releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ github.ref }} --generate-notes ./mcx/mcx#mcx
