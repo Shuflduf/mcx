@@ -13,22 +13,33 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        target: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-msvc]
+        platform:
+          - os_name: Linux-x86_64
+            os: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+
+          - os_name: macOS-x86_64
+            os: macOS-latest
+            target: x86_64-apple-darwin
+
+          - os_name: Windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
 
     permissions: write-all
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          target: ${{ matrix.target }}
+          target: ${{ matrix.platform.target }}
           override: true
 
       - name: Output rust version for educational purposes
@@ -43,17 +54,22 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
   
-      - name: Build
-        run: cargo build --release --verbose
+      - name: Build executable
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+          strip: true
 
       - name: Run tests
         run: cargo test --release --verbose
-  
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+
+      - name: Publish artifacts and release
+        uses: houseabsolute/actions-rust-release@v0
         with:
-          name: mcx-${{ matrix.os }}-${{ matrix.target }}
-          path: ${{ matrix.os == 'windows-latest' && 'target/release/mcx.exe' || 'target/release/mcx' }}
+          executable-name: mcx
+          target: ${{ matrix.platform.target }}
+        if: matrix.toolchain == 'stable'
 
   release:
     runs-on: ubuntu-latest
@@ -80,13 +96,13 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: mcx-ubuntu-latest-x86_64-unknown-linux-gnu
+          name: mcx-ubuntu-24.04-x86_64-unknown-linux-musl
           path: ./mcx-ubuntu
   
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: mcx-macos-latest-x86_64-apple-darwin
+          name: mcx-macOS-latest-x86_64-apple-darwin
           path: ./mcx-macos
 
       - name: Download Windows artifact
