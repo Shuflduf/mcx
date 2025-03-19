@@ -56,14 +56,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
       - name: Download release artifact
         uses: actions/download-artifact@v4
         with:
           name: mcx
           path: ./mcx
-
+  
       - name: Publish built binary to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ github.ref }} --generate-notes ./mcx/mcx#mcx
+        run: gh release create ${ GITHUB_REF##*/ } --generate-notes ./mcx/mcx#mcx
