@@ -1,4 +1,4 @@
-name: Rust
+name: Rust Build & Release
 
 on:
   push:
@@ -10,25 +10,30 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  BINARY_NAME: mcx    # Your binary name
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: mcx
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: mcx
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: mcx.exe
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
 
-    permissions: write-all
-    
+      - name: Build Release
+        uses: rust-build/rust-build.action@v1.4.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          RUSTTARGET: x86_64-unknown-linux-gnu,x86_64-apple-darwin,x86_64-pc-windows-msvc
+          UPLOAD_MODE: release
+          ARCHIVE_TYPES: tar.gz,zip
+          ARCHIVE_NAME: mcx
+          MINIFY: true
+
+  test:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
@@ -36,80 +41,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          target: ${{ matrix.target }}
           override: true
-
-      - name: Output rust version for educational purposes
-        run: rustup --version
- 
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
- 
-      - name: Build
-        run: cargo build --release --verbose
 
       - name: Run tests
         run: cargo test --release --verbose
- 
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mcx-${{ matrix.os }}
-          path: target/release/${{ matrix.artifact_name }}
-
-  release:
-    if: github.event_name == 'release'
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcx-ubuntu-latest
-          path: ./mcx-linux
-
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcx-macos-latest
-          path: ./mcx-macos
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcx-windows-latest
-          path: ./mcx-windows
-
-      - name: Make binaries executable
-        run: |
-          chmod +x ./mcx-linux/mcx
-          chmod +x ./mcx-macos/mcx
- 
-      - name: Setup GitHub CLI
-        run: |
-          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-          && sudo apt update \
-          && sudo apt install gh -y
-
-      - name: Upload Release Assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload ${GITHUB_REF#refs/tags/} \
-            "./mcx-linux/mcx#mcx-linux" \
-            "./mcx-macos/mcx#mcx-macos" \
-            "./mcx-windows/mcx.exe#mcx-windows"
