@@ -1,5 +1,5 @@
 [package]
-name = "mcli"
+name = "mcx"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,8 +1,10 @@
 use std::fs;
 use clap::{CommandFactory, Parser, Subcommand};
 use inquire::{Select, Text};
+use mods::{add, list};
 
 mod versions;
+mod mods;
 mod run;
 
 #[derive(Parser)]
@@ -70,14 +72,6 @@ loader = "{loader}"
     ).expect("Error writing configuration file");
 }
 
-async fn add_mod(token: String) {
-    println!("Adding mod: {}", token);
-}
-
-async fn list_mods() {
-    println!("Listing mods...");
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -86,8 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(Commands::Init) => init_server().await,
         Some(Commands::Run) => run::start_server(),
         Some(Commands::Mod { command }) => match command {
-            Some(ModSubcommand::Add { token }) => add_mod(token).await,
-            Some(ModSubcommand::List) => list_mods().await,
+            Some(ModSubcommand::Add { token }) => add(&token).await?,
+            Some(ModSubcommand::List) => list().await?,
             None => {
                 // When no subcommand is provided for 'mod', show help
                 let mut cmd = Cli::command();
