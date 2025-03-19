@@ -13,33 +13,22 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        platform:
-          - os_name: Linux-x86_64
-            os: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
-
-          - os_name: macOS-x86_64
-            os: macOS-latest
-            target: x86_64-apple-darwin
-
-          - os_name: Windows-x86_64
-            os: windows-latest
-            target: x86_64-pc-windows-msvc
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        target: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-msvc]
 
     permissions: write-all
     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          target: ${{ matrix.platform.target }}
+          target: ${{ matrix.target }}
           override: true
 
       - name: Output rust version for educational purposes
@@ -54,22 +43,17 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
   
-      - name: Build executable
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          target: ${{ matrix.platform.target }}
-          args: "--locked --release"
-          strip: true
+      - name: Build
+        run: cargo build --release --verbose
 
       - name: Run tests
         run: cargo test --release --verbose
-
-      - name: Publish artifacts and release
-        uses: houseabsolute/actions-rust-release@v0
+  
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
         with:
-          executable-name: mcx
-          target: ${{ matrix.platform.target }}
-        if: matrix.toolchain == 'stable'
+          name: mcx-${{ matrix.os }}-${{ matrix.target }}
+          path: ${{ matrix.os == 'windows-latest' && 'target/release/mcx.exe' || 'target/release/mcx' }}
 
   release:
     runs-on: ubuntu-latest
@@ -77,32 +61,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Extract version from Cargo.toml
-        id: extract_version
-        run: |
-          version=$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
-          echo "version=$version" >> $GITHUB_ENV
-
-      - name: Create Git tag
-        env:
-          VERSION: ${{ env.version }}
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git tag $VERSION
-          git push origin $VERSION
   
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: mcx-ubuntu-24.04-x86_64-unknown-linux-musl
+          name: mcx-ubuntu-latest-x86_64-unknown-linux-gnu
           path: ./mcx-ubuntu
   
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: mcx-macOS-latest-x86_64-apple-darwin
+          name: mcx-macos-latest-x86_64-apple-darwin
           path: ./mcx-macos
 
       - name: Download Windows artifact
@@ -114,9 +83,8 @@ jobs:
       - name: Publish built binaries to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ env.version }}
         run: |
-          gh release create $VERSION --generate-notes \
+          gh release create ${GITHUB_REF##*/} --generate-notes \
             ./mcx-ubuntu/mcx#mcx-linux \
             ./mcx-macos/mcx#mcx-macos \
             ./mcx-windows/mcx.exe#mcx-windows
