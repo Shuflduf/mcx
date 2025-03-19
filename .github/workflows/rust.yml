@@ -17,6 +17,9 @@ jobs:
     strategy:
       matrix:
         BUILD_TARGET: [release] # refers to a cargo profile
+        
+    permissions:
+      contents: write
     
     steps:
       - uses: actions/checkout@v4
