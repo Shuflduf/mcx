@@ -66,4 +66,4 @@ jobs:
       - name: Publish built binary to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${ GITHUB_REF##*/ } --generate-notes ./mcx/mcx#mcx
+        run: gh release create ${GITHUB_REF##*/} --generate-notes ./mcx/mcx#mcx
