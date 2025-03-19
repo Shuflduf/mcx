@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mcx-${{ matrix.os }}-${{ matrix.target }}
-          path: target/release/mcx
+          path: ${{ matrix.os == 'windows-latest' && 'target/release/mcx.exe' || 'target/release/mcx' }}
 
   release:
     needs: build
