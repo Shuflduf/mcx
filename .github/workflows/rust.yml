@@ -61,7 +61,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Get current timestamp
+        id: get_timestamp
+        run: echo "TIMESTAMP=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
   
+      - name: Set release tag
+        id: set_release_tag
+        run: echo "RELEASE_TAG=${GITHUB_REF##*/}-${{ env.TIMESTAMP }}" >> $GITHUB_ENV
+
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
@@ -83,8 +91,9 @@ jobs:
       - name: Publish built binaries to GitHub releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          gh release create ${GITHUB_REF##*/} --generate-notes \
+          gh release create $RELEASE_TAG --generate-notes \
             ./mcx-ubuntu/mcx#mcx-linux \
             ./mcx-macos/mcx#mcx-macos \
             ./mcx-windows/mcx.exe#mcx-windows
