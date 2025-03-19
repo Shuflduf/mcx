@@ -4,9 +4,9 @@ use crate::versions::{Neoforge, Vanilla};
 use crate::versions::Loader;
 
 pub fn start_server() {
-    if fs::exists("mcli.toml").expect("Error checking for configuration file") {
+    if fs::exists("mcx.toml").expect("Error checking for configuration file") {
         verify_eula();
-        let config = fs::read_to_string("mcli.toml").expect("Error reading configuration file");
+        let config = fs::read_to_string("mcx.toml").expect("Error reading configuration file");
         let config: toml::Value = toml::from_str(&config).expect("Error parsing configuration file");
         let name = config["server"]["name"].as_str().unwrap();
         let version = config["server"]["version"].as_str().unwrap();
@@ -33,7 +33,7 @@ pub fn start_server() {
         //    .expect("Error starting server")
         //    .wait();
     } else {
-        println!("No configuration file found. Run `mcli init` to create a server profile.");
+        println!("No configuration file found. Run `mcx init` to create a server profile.");
     }
 }
 
@@ -43,7 +43,7 @@ fn verify_eula() {
     }
     let eula = fs::read_to_string("eula.txt").expect("Error reading EULA file");
     if !eula.contains("eula=true") {
-        let confirmation = inquire::Confirm::new("Do you accept the Minecraft EULA?")
+        let confirmation = inquire::Confirm::new("Do you accept the Minecraft EULA? (https://account.mojang.com/documents/minecraft_eula)")
             .with_default(false)
             .prompt()
             .unwrap();

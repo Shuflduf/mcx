@@ -59,9 +59,9 @@ async fn init_server() {
         println!("Error downloading version: {}", e);
         return;
     }
-    println!("Creating MCLI configuration");
+    println!("Creating MCX configuration");
     fs::write(
-        format!("{}/mcli.toml", name),
+        format!("{}/mcx.toml", name),
         format!(
             r#"[server]
 name = "{name}"
@@ -70,6 +70,10 @@ loader = "{loader}"
 "#,
         ),
     ).expect("Error writing configuration file");
+
+    println!("To run your server:");
+    println!("\x1b[1;32m cd {}/ \x1b[0m", name);
+    println!("\x1b[1;32m mcx run \x1b[0m");
 }
 
 #[tokio::main]
