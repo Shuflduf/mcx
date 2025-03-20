@@ -9,25 +9,6 @@ env:
   BINARY_NAME: mcx
 
 jobs:
-  create-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.create_tag.outputs.tag_name }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Get current time
-        id: time
-        run: echo "timestamp=$(date -u +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
-      
-      - name: Create Tag
-        id: create_tag
-        run: |
-          tag_name=${{ steps.time.outputs.timestamp }}
-          git tag $tag_name
-          git push origin $tag_name
-          echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
-
   check-version:
     runs-on: ubuntu-latest
     outputs:
