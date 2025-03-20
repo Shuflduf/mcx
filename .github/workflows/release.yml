@@ -41,7 +41,7 @@ jobs:
           fi
 
   build-and-release:
-    needs: [create-tag, check-version]
+    needs: [check-version]
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
