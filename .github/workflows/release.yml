@@ -19,7 +19,7 @@ jobs:
       
       - name: Get current time
         id: time
-        run: echo "timestamp=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+        run: echo "timestamp=$(date -u +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
       
       - name: Create Tag
         id: create_tag
@@ -41,7 +41,7 @@ jobs:
       - name: Get Cargo.toml version
         id: get_version
         run: |
-          version=$(grep '^version = ' Cargo.toml | cut -d '\"' -f 2)
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml)
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Check if release needed
@@ -50,9 +50,9 @@ jobs:
           # Get the latest release tag
           latest_release=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest" | \
-            grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+            grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' || echo "none")
           
-          # Get current version from Cargo.toml
+          # Get current version from previous step
           current_version="${{ steps.get_version.outputs.version }}"
           
           if [ "$latest_release" != "$current_version" ]; then
@@ -84,6 +84,7 @@ jobs:
             
             Automated release for commit ${{ github.sha }}
             Created at: ${{ needs.create-tag.outputs.tag_name }}
+            Released by: ${{ github.actor }}
 
   # Build jobs for different platforms
   build:
