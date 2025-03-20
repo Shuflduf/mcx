@@ -33,7 +33,7 @@ async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::E
     let server_version = config::get_value("version");
 
     let search_url = format!(
-        "https://api.modrinth.com/v2/project/{}/version?game_versions=[\"{}\"]",
+        "https://api.modrinth.com/v2/project/{}/version?game_versions=[{}]",
         token,
         server_version
     );
