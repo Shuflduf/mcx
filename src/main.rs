@@ -67,7 +67,7 @@ async fn init_server() -> Result<(), Box<dyn std::error::Error>> {
     server_loader.download(&version, &name).await?;
     
     println!("Creating MCX configuration");
-    config::init(&name, &version, loader, &server_loader.mc_version(&version)?);
+    config::init(&name, &server_loader.mc_version(&version)?, loader, &version);
 
     println!("To run your server, run the following commands:");
     println!("\x1b[1;32m $ cd {}/ \x1b[0m", name);

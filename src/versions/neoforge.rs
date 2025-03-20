@@ -46,10 +46,16 @@ impl VersionProvider for Neoforge {
     }
 
     fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>> {
-        if let Some(trimmed) = loader_version.strip_suffix("-beta") {
-            Ok(format!("1.{}", trimmed))
+        let no_beta_tag = if let Some(trimmed) = loader_version.strip_suffix("-beta") {
+            trimmed
         } else {
-            Ok(format!("1.{}", loader_version))
+            loader_version
+        };
+        let split: &str = no_beta_tag.rsplit_once(".").unwrap().0;
+        if let Some(no_zero) = split.strip_suffix(".0") {
+            Ok(format!("1.{}", no_zero))
+        } else {
+            Ok(format!("1.{}", split))
         }
     }
 
@@ -92,5 +98,19 @@ impl Downloadable for Neoforge {
             println!("Neoforge server installed successfully");
             Ok(())
         })
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // i just wanted to write tests lmao
+    #[test]
+    fn mc_version_trimming() {
+        assert_eq!(Neoforge.mc_version("20.2.17-beta").unwrap(), "1.20.2");
+        assert_eq!(Neoforge.mc_version("20.2.17").unwrap(), "1.20.2");
+        assert_eq!(Neoforge.mc_version("21.0.60-beta").unwrap(), "1.21");
     }
 }
