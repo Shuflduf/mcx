@@ -71,9 +71,9 @@ loader = "{loader}"
         ),
     ).expect("Error writing configuration file");
 
-    println!("To run your server:");
-    println!("\x1b[1;32m cd {}/ \x1b[0m", name);
-    println!("\x1b[1;32m mcx run \x1b[0m");
+    println!("To run your server, run the following commands:");
+    println!("\x1b[1;32m $ cd {}/ \x1b[0m", name);
+    println!("\x1b[1;32m $ mcx run \x1b[0m");
 }
 
 #[tokio::main]
