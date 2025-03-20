@@ -58,7 +58,13 @@ impl Loader for Neoforge {
     }
 
     fn run() {
-        let _ = std::process::Command::new("./run.bat")
+        let script = if cfg!(windows) {
+            "./run.bat"
+        } else {
+            "./run.sh"
+        };
+    
+        let _ = std::process::Command::new(script)
             .spawn()
             .expect("Error starting server")
             .wait();

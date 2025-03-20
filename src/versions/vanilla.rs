@@ -1,4 +1,4 @@
-use std::{fs::{read_to_string, File}, io::Write};
+use std::{fs::File, io::Write};
 use serde_json::Value;
 use crate::versions::DownloadError;
 use super::Loader;
@@ -7,13 +7,7 @@ pub struct Vanilla;
 
 impl Loader for Vanilla {
     async fn get_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-        let json_data: Value = serde_json::from_str(
-            &reqwest::get("https://launchermeta.mojang.com/mc/game/version_manifest.json")
-                .await?
-                .text()
-                .await?
-            )?;
-        
+        let json_data = versions_json().await?;
 
         //let file_data = read_to_string("src/versions.json").unwrap();
         //let json_data: Value = serde_json::from_str(&file_data).unwrap();
@@ -30,8 +24,7 @@ impl Loader for Vanilla {
     }
 
     async fn download(&self, version: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let file_data = read_to_string("src/versions.json")?;
-        let json_data: Value = serde_json::from_str(&file_data)?;
+        let json_data = versions_json().await?;
 
         // Find version data
         let version_data = json_data["versions"]
@@ -86,3 +79,13 @@ impl Loader for Vanilla {
     }
 }
 
+async fn versions_json() -> Result<Value, Box<dyn std::error::Error>> {
+    let json_data: Value = serde_json::from_str(
+        &reqwest::get("https://launchermeta.mojang.com/mc/game/version_manifest.json")
+            .await?
+            .text()
+            .await?
+        )?;
+
+    Ok(json_data)
+}

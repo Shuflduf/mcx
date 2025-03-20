@@ -6,6 +6,7 @@ use mods::{add, list};
 mod versions;
 mod mods;
 mod run;
+mod config;
 
 #[derive(Parser)]
 #[command(author = "Shuflduf")]
@@ -60,16 +61,7 @@ async fn init_server() {
         return;
     }
     println!("Creating MCX configuration");
-    fs::write(
-        format!("{}/mcx.toml", name),
-        format!(
-            r#"[server]
-name = "{name}"
-version = "{version}"
-loader = "{loader}"
-"#,
-        ),
-    ).expect("Error writing configuration file");
+    config::init(&name, &version, loader);
 
     println!("To run your server, run the following commands:");
     println!("\x1b[1;32m $ cd {}/ \x1b[0m", name);

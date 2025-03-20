@@ -1,5 +1,6 @@
 use std::fs;
 
+//use crate::config;
 use crate::versions::{Neoforge, Vanilla};
 use crate::versions::Loader;
 
@@ -11,6 +12,9 @@ pub fn start_server() {
         let name = config["server"]["name"].as_str().unwrap();
         let version = config["server"]["version"].as_str().unwrap();
         let loader = config["server"]["loader"].as_str().unwrap();
+        //let name = config::get_value("name");
+        //let version = config::get_value("version");
+        //let loader = config::get_value("loader");
 
         println!("Starting server {} ({} - {})", name, version, loader);
 
