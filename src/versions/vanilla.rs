@@ -7,8 +7,16 @@ pub struct Vanilla;
 
 impl Loader for Vanilla {
     async fn get_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-        let file_data = read_to_string("src/versions.json").unwrap();
-        let json_data: Value = serde_json::from_str(&file_data).unwrap();
+        let json_data: Value = serde_json::from_str(
+            &reqwest::get("https://launchermeta.mojang.com/mc/game/version_manifest.json")
+                .await?
+                .text()
+                .await?
+            )?;
+        
+
+        //let file_data = read_to_string("src/versions.json").unwrap();
+        //let json_data: Value = serde_json::from_str(&file_data).unwrap();
 
         Ok(
             json_data["versions"]
