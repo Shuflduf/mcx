@@ -1,7 +1,7 @@
 [package]
 name = "mcx"
-version = "0.1.7"
-edition = "2024"
+version = "0.1.8"
+edition = "2021"
 authors = ["Shuflduf <shuflduf@shuflduf.xyz>"]
 description = "A Minecraft server manager"
 license = "MIT"

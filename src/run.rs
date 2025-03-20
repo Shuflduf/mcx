@@ -1,44 +1,38 @@
+// Last updated by Shuflduf on 2025-03-20 19:13:08 UTC
+
+use crate::versions::ServerLoader;
 use std::fs;
 
-//use crate::config;
-use crate::versions::{Neoforge, Vanilla};
-use crate::versions::Loader;
-
-pub fn start_server() {
-    if fs::exists("mcx.toml").expect("Error checking for configuration file") {
-        verify_eula();
-        let config = fs::read_to_string("mcx.toml").expect("Error reading configuration file");
-        let config: toml::Value = toml::from_str(&config).expect("Error parsing configuration file");
-        let name = config["server"]["name"].as_str().unwrap();
-        let version = config["server"]["version"].as_str().unwrap();
-        let loader = config["server"]["loader"].as_str().unwrap();
-        //let name = config::get_value("name");
-        //let version = config::get_value("version");
-        //let loader = config::get_value("loader");
-
-        println!("Starting server {} ({} - {})", name, version, loader);
-
-        match loader {
-            "Vanilla" => {
-                Vanilla::run();
-            }
-            "NeoForge" => {
-                Neoforge::run();
-            }
-            _ => {
-                println!("Invalid loader: {}", loader);
-            }
-        }
-        //let _ = Command::new("java")
-        //    .arg("-jar")
-        //    .arg(format!("{}.jar", version))
-        //    .arg("nogui")
-        //    .spawn()
-        //    .expect("Error starting server")
-        //    .wait();
-    } else {
+pub fn start_server() -> Result<(), Box<dyn std::error::Error>> {
+    if !fs::exists("mcx.toml")? {
         println!("No configuration file found. Run `mcx init` to create a server profile.");
+        return Ok(());
     }
+
+    verify_eula();
+
+    let config = fs::read_to_string("mcx.toml")?;
+    let config: toml::Value = toml::from_str(&config)?;
+
+    let name = config["server"]["name"]
+        .as_str()
+        .ok_or("Missing server name in config")?;
+    let version = config["server"]["version"]
+        .as_str()
+        .ok_or("Missing version in config")?;
+    let loader_str = config["server"]["loader"]
+        .as_str()
+        .ok_or("Missing loader in config")?;
+
+    println!("Starting server {} ({} - {})", name, version, loader_str);
+
+    // Create the server loader directly from the string
+    let loader = ServerLoader::from_str(loader_str)?;
+
+    // Run the server
+    loader.run()?;
+
+    Ok(())
 }
 
 fn verify_eula() {

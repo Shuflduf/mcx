@@ -1,6 +1,6 @@
 use std::fs;
 
-pub fn init(name: &str, version: &str, loader: &str) {
+pub fn init(name: &str, version: &str, loader: &str, loader_version: &str) {
     fs::write(
         format!("{}/mcx.toml", name),
         format!(
@@ -8,9 +8,11 @@ pub fn init(name: &str, version: &str, loader: &str) {
 name = "{name}"
 version = "{version}"
 loader = "{loader}"
+loader_version = "{loader_version}"
 "#,
         ),
-    ).expect("Error writing configuration file");
+    )
+    .expect("Error writing configuration file");
 }
 
 pub fn get_value(id: &str) -> String {
