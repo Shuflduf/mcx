@@ -9,7 +9,6 @@ env:
   BINARY_NAME: mcx
 
 jobs:
-  # This job runs on push and creates a tag with timestamp
   create-tag:
     runs-on: ubuntu-latest
     outputs:
@@ -29,7 +28,6 @@ jobs:
           git push origin $tag_name
           echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
 
-  # This job checks if we need to create a new release based on version
   check-version:
     runs-on: ubuntu-latest
     outputs:
@@ -61,7 +59,6 @@ jobs:
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-  # This job builds and creates release when version has changed
   build-and-release:
     needs: [create-tag, check-version]
     if: needs.check-version.outputs.should_release == 'true'
@@ -86,7 +83,6 @@ jobs:
             Created at: ${{ needs.create-tag.outputs.tag_name }}
             Released by: ${{ github.actor }}
 
-  # Build jobs for different platforms
   build:
     needs: [check-version, build-and-release]
     if: needs.check-version.outputs.should_release == 'true'
@@ -135,3 +131,24 @@ jobs:
           files: target/${{ matrix.asset_name }}
           tag_name: v${{ needs.check-version.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crate:
+    needs: [check-version, build-and-release]
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Login to crates.io
+        run: cargo login ${{ secrets.CRATES_IO }}
+        
+      - name: Publish to crates.io
+        run: cargo publish
+        
+      - name: Cleanup credentials
+        if: always()
+        run: |
+          rm -f ~/.cargo/credentials
