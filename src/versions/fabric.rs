@@ -1,4 +1,4 @@
-use super::{Downloadable, Loader, VersionProvider};
+use super::{Downloadable, Loader, LoaderFuture, VersionProvider};
 use crate::versions::DownloadError;
 use inquire::Select;
 use serde_json::Value;
@@ -41,12 +41,14 @@ impl VersionProvider for Fabric {
         Ok(loader_version.to_string())
     }
 
-    async fn loader_version(&self) -> Option<String> {
-        Some(
-            Select::new("Fabric version: ", fabric_versions().await.unwrap())
-            .prompt()
-            .unwrap()
-        )
+    fn loader_version(&self) -> LoaderFuture {
+        Box::pin(async {
+            Some(
+                Select::new("Fabric version: ", fabric_versions().await.unwrap())
+                .prompt()
+                .unwrap()
+            )
+        })
     }
 }
 

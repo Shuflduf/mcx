@@ -1,5 +1,3 @@
-// Last updated by Shuflduf on 2025-03-20 19:07:00 UTC
-
 use std::future::Future;
 use std::pin::Pin;
 use thiserror::Error;

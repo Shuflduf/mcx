@@ -59,16 +59,16 @@ async fn init_server() -> Result<(), Box<dyn std::error::Error>> {
         println!("Error creating directory: {}", e);
     }
 
-    println!("Downloading server version...");
-    server_loader.download(&version, &name).await?;
-
     println!("Creating MCX configuration");
     config::init(
         &name,
         &server_loader.mc_version(&version)?,
         loader,
-        &version,
+        &server_loader.loader_version().await.unwrap_or(version.clone()),
     );
+
+    println!("Downloading server version...");
+    server_loader.download(&version, &name).await?;
 
     println!("To run your server, run the following commands:");
     println!("\x1b[1;32m $ cd {}/ \x1b[0m", name);
