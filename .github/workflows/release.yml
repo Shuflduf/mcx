@@ -109,55 +109,12 @@ jobs:
             cp ${{ matrix.artifact_name }} ../../${{ matrix.asset_name }}
           fi
 
-      - name: Prepare binstall archive
-        shell: bash
-        run: |
-          mkdir -p dist/bin
-          cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} dist/bin/
-          cd dist
-          tar czf "../${{ env.BINARY_NAME }}-${{ needs.check-version.outputs.version }}-${{ matrix.binstall_suffix }}" .
-
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
           files: |
             target/${{ matrix.asset_name }}
             ${{ env.BINARY_NAME }}-${{ needs.check-version.outputs.version }}-${{ matrix.binstall_suffix }}
-          tag_name: v${{ needs.check-version.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  # New job to create binstall.toml
-  create-binstall-manifest:
-    needs: [check-version, build]
-    if: needs.check-version.outputs.should_release == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Create binstall.toml
-        run: |
-          cat > binstall.toml << EOF
-          name = "${{ env.BINARY_NAME }}"
-          version = "${{ needs.check-version.outputs.version }}"
-          base_url = "https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}"
-          
-          [[platform]]
-          triple = "x86_64-unknown-linux-gnu"
-          archive = "${{ env.BINARY_NAME }}-${{ needs.check-version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz"
-          
-          [[platform]]
-          triple = "x86_64-apple-darwin"
-          archive = "${{ env.BINARY_NAME }}-${{ needs.check-version.outputs.version }}-x86_64-apple-darwin.tar.gz"
-          
-          [[platform]]
-          triple = "x86_64-pc-windows-msvc"
-          archive = "${{ env.BINARY_NAME }}-${{ needs.check-version.outputs.version }}-x86_64-pc-windows-msvc.tar.gz"
-          EOF
-
-      - name: Upload binstall.toml
-        uses: softprops/action-gh-release@v1
-        with:
-          files: binstall.toml
           tag_name: v${{ needs.check-version.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -181,3 +138,6 @@ jobs:
         if: always()
         run: |
           rm -f ~/.cargo/credentials
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@v1.12.2
