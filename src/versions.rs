@@ -34,7 +34,7 @@ pub trait Loader {
 }
 
 pub trait VersionProvider {
-    fn get_versions<'a>(&'a self) -> VersionsFuture<'a>;
+    fn get_versions(&self) -> VersionsFuture<'_>;
 
     fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>>;
 

@@ -11,7 +11,7 @@ mod versions;
 
 #[derive(Parser)]
 #[command(author = "Shuflduf")]
-#[command(version = "1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "Command Line Interface to create and manage Minecraft servers")]
 struct Cli {
     #[command(subcommand)]
