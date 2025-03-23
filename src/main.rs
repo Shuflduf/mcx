@@ -1,5 +1,3 @@
-#![feature(string_remove_matches)]
-
 use clap::{CommandFactory, Parser, Subcommand};
 use inquire::{Select, Text};
 use mods::{add, list};

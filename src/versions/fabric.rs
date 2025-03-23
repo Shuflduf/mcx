@@ -58,13 +58,11 @@ impl Downloadable for Fabric {
         path: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>> + Send + 'a>> {
         Box::pin(async move {
-            let mut loader_version = config::get_value(path, "loader_version");
-            loader_version.remove_matches("\"");
-
             // Get jar url
             let jar_url = format!(
                 "https://meta.fabricmc.net/v2/versions/loader/{}/{}/1.0.3/server/jar",
-                version, loader_version
+                version,
+                config::get_value(path, "loader_version").replace("\"", "")
             );
 
             println!("Downloading server jar from: {jar_url}");
