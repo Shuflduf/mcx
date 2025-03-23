@@ -17,7 +17,7 @@ pub fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     let name = config["server"]["name"]
         .as_str()
         .ok_or("Missing server name in config")?;
-    let version = config["server"]["version"]
+    let version = config["server"]["mc_version"]
         .as_str()
         .ok_or("Missing version in config")?;
     let loader_str = config["server"]["loader"]

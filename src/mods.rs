@@ -1,4 +1,7 @@
-use std::{fs::{self, File}, io::Write};
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 
 use crate::config;
 
@@ -15,14 +18,13 @@ pub async fn add(token: &str) -> Result<(), Box<dyn std::error::Error>> {
     if fs::create_dir("mods").is_err() {
         println!("Mods directory already exists, skipping creation.");
     }
-    let mut file = File::create(
-        format!(
-            "mods/{}",
-            download_url.rsplit_once('/')
-                .map(|(_, filename)| filename.to_string())
-                .unwrap_or("mod.jar".to_string())
-        )
-    )?;
+    let mut file = File::create(format!(
+        "mods/{}",
+        download_url
+            .rsplit_once('/')
+            .map(|(_, filename)| filename.to_string())
+            .unwrap_or("mod.jar".to_string())
+    ))?;
     file.write_all(&data)?;
     println!("Mod downloaded succesfully");
 
@@ -34,15 +36,11 @@ async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::E
 
     let search_url = format!(
         "https://api.modrinth.com/v2/project/{}/version?game_versions=[{}]",
-        token,
-        server_version
+        token, server_version
     );
 
     println!("Searching for mod at {}", search_url);
-    let response = reqwest::get(search_url)
-        .await?
-        .text()
-        .await?;
+    let response = reqwest::get(search_url).await?.text().await?;
 
     let response_json: serde_json::Value = serde_json::from_str(&response)?;
 

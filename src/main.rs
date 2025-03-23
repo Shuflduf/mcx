@@ -1,15 +1,15 @@
 // Last updated by Shuflduf on 2025-03-20 19:14:16 UTC
 
-use std::fs;
 use clap::{CommandFactory, Parser, Subcommand};
 use inquire::{Select, Text};
 use mods::{add, list};
+use std::fs;
 use versions::ServerLoader;
 
-mod versions;
+mod config;
 mod mods;
 mod run;
-mod config;
+mod versions;
 
 #[derive(Parser)]
 #[command(author = "Shuflduf")]
@@ -46,18 +46,14 @@ enum ModSubcommand {
 }
 
 async fn init_server() -> Result<(), Box<dyn std::error::Error>> {
-    let loaders = vec!["Vanilla", "NeoForge"];
+    let loaders = vec!["Vanilla", "NeoForge", "Fabric"];
     let name = Text::new("Server Name: ").prompt()?;
-    let loader = Select::new("Loader: ", loaders)
-        .prompt()?;
+    let loader = Select::new("Loader: ", loaders).prompt()?;
 
-    // Create the server loader
     let server_loader = ServerLoader::from_str(loader)?;
 
-    // Get versions for the selected loader
     let versions = server_loader.get_versions().await?;
-    let version = Select::new("Minecraft Version: ", versions)
-        .prompt()?;
+    let version = Select::new("Minecraft Version: ", versions).prompt()?;
 
     if let Err(e) = fs::create_dir(&name) {
         println!("Error creating directory: {}", e);
@@ -65,9 +61,14 @@ async fn init_server() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Downloading server version...");
     server_loader.download(&version, &name).await?;
-    
+
     println!("Creating MCX configuration");
-    config::init(&name, &server_loader.mc_version(&version)?, loader, &version);
+    config::init(
+        &name,
+        &server_loader.mc_version(&version)?,
+        loader,
+        &version,
+    );
 
     println!("To run your server, run the following commands:");
     println!("\x1b[1;32m $ cd {}/ \x1b[0m", name);

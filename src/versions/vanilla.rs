@@ -39,7 +39,6 @@ impl VersionProvider for Vanilla {
     fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>> {
         Ok(loader_version.to_string())
     }
-
 }
 
 impl Downloadable for Vanilla {

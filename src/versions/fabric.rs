@@ -1,5 +1,6 @@
 use super::{Downloadable, Loader, VersionProvider};
 use crate::versions::DownloadError;
+use inquire::Select;
 use serde_json::Value;
 use std::{fs::File, future::Future, io::Write, pin::Pin};
 
@@ -18,7 +19,7 @@ impl Loader for Fabric {
     }
 }
 
-impl VersionProvider for Vanilla {
+impl VersionProvider for Fabric {
     fn get_versions(
         &self,
     ) -> Pin<Box<dyn Future<Output = Result<Vec<String>, Box<dyn std::error::Error>>> + Send + '_>>
@@ -26,12 +27,12 @@ impl VersionProvider for Vanilla {
         Box::pin(async {
             let json_data = versions_json().await?;
 
-            Ok(json_data["versions"]
+            Ok(json_data
                 .as_array()
                 .unwrap()
                 .iter()
-                .filter(|v| v["type"].as_str().unwrap() == "release")
-                .map(|v| v["id"].as_str().unwrap().to_string())
+                .filter(|v| v["stable"].as_bool().unwrap_or(false))
+                .map(|v| v["version"].as_str().unwrap().to_string())
                 .collect())
         })
     }
@@ -40,9 +41,16 @@ impl VersionProvider for Vanilla {
         Ok(loader_version.to_string())
     }
 
+    async fn loader_version(&self) -> Option<String> {
+        Some(
+            Select::new("Fabric version: ", fabric_versions().await.unwrap())
+            .prompt()
+            .unwrap()
+        )
+    }
 }
 
-impl Downloadable for Vanilla {
+impl Downloadable for Fabric {
     fn download<'a>(
         &'a self,
         version: &'a str,
@@ -101,4 +109,21 @@ async fn versions_json() -> Result<Value, Box<dyn std::error::Error>> {
     )?;
 
     Ok(json_data)
+}
+
+async fn fabric_versions() -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let json_data: Value = serde_json::from_str(
+        &reqwest::get("https://meta.fabricmc.net/v2/versions/loader")
+            .await?
+            .text()
+            .await?,
+    )?;
+
+    Ok(json_data
+        .as_array()
+        .unwrap()
+        .iter()
+        //.filter(|v| v["stable"].as_bool().unwrap_or(false))
+        .map(|v| v["version"].as_str().unwrap().to_string())
+        .collect())
 }

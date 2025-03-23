@@ -101,7 +101,6 @@ impl Downloadable for Neoforge {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

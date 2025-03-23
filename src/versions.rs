@@ -4,11 +4,18 @@ use std::future::Future;
 use std::pin::Pin;
 use thiserror::Error;
 
+pub mod fabric;
 pub mod neoforge;
 pub mod vanilla;
 
+pub use fabric::Fabric;
 pub use neoforge::Neoforge;
 pub use vanilla::Vanilla;
+
+type BoxError = Box<dyn std::error::Error>;
+type VersionsFuture<'a> = Pin<Box<dyn Future<Output = Result<Vec<String>, BoxError>> + Send + 'a>>;
+type DownloadFuture<'a> = Pin<Box<dyn Future<Output = Result<(), BoxError>> + Send + 'a>>;
+type LoaderFuture<'a> = Pin<Box<dyn Future<Output = Option<String>> + Send + 'a>>;
 
 #[derive(Error, Debug)]
 pub enum DownloadError {
@@ -29,19 +36,17 @@ pub trait Loader {
 }
 
 pub trait VersionProvider {
-    fn get_versions<'a>(
-        &'a self,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<String>, Box<dyn std::error::Error>>> + Send + 'a>>;
+    fn get_versions<'a>(&'a self) -> VersionsFuture<'a>;
 
-    fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>> ;
+    fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>>;
+
+    fn loader_version(&self) -> LoaderFuture {
+        Box::pin(async { None })
+    }
 }
 
 pub trait Downloadable {
-    fn download<'a>(
-        &'a self,
-        version: &'a str,
-        path: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>> + Send + 'a>>;
+    fn download<'a>(&'a self, version: &'a str, path: &'a str) -> DownloadFuture<'a>;
 }
 
 pub struct ServerLoader {
@@ -69,6 +74,14 @@ impl ServerLoader {
                     downloader: Box::new(neoforge),
                 })
             }
+            "Fabric" => {
+                let fabric = Fabric;
+                Ok(Self {
+                    runner: Box::new(fabric.clone()),
+                    version_provider: Box::new(fabric.clone()),
+                    downloader: Box::new(fabric),
+                })
+            }
             _ => Err(DownloadError::InvalidMetadata(format!(
                 "Invalid loader: {}",
                 loader
@@ -78,6 +91,10 @@ impl ServerLoader {
 
     pub fn mc_version(&self, loader_version: &str) -> Result<String, Box<dyn std::error::Error>> {
         self.version_provider.mc_version(loader_version)
+    }
+
+    pub async fn loader_version(&self) -> Option<String> {
+        self.version_provider.loader_version().await
     }
 
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
