@@ -1,5 +1,3 @@
-// Last updated by Shuflduf on 2025-03-20 19:13:08 UTC
-
 use crate::versions::ServerLoader;
 use std::fs;
 

@@ -32,7 +32,7 @@ pub async fn add(token: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let server_version = config::get_value("version");
+    let server_version = config::get_value(".", "version");
 
     let search_url = format!(
         "https://api.modrinth.com/v2/project/{}/version?game_versions=[{}]",

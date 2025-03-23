@@ -15,8 +15,9 @@ loader_version = "{loader_version}"
     .expect("Error writing configuration file");
 }
 
-pub fn get_value(id: &str) -> String {
-    let config = fs::read_to_string("mcx.toml").expect("Error reading configuration file");
+pub fn get_value(path: &str, id: &str) -> String {
+    let config =
+        fs::read_to_string(format!("{}/mcx.toml", path)).expect("Error reading configuration file");
     let config: toml::Value = toml::from_str(&config).unwrap();
     config["server"][id].to_string()
 }

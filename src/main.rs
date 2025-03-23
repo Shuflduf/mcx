@@ -1,4 +1,4 @@
-// Last updated by Shuflduf on 2025-03-20 19:14:16 UTC
+#![feature(string_remove_matches)]
 
 use clap::{CommandFactory, Parser, Subcommand};
 use inquire::{Select, Text};
@@ -6,7 +6,7 @@ use mods::{add, list};
 use std::fs;
 use versions::ServerLoader;
 
-mod config;
+pub mod config;
 mod mods;
 mod run;
 mod versions;
@@ -64,7 +64,10 @@ async fn init_server() -> Result<(), Box<dyn std::error::Error>> {
         &name,
         &server_loader.mc_version(&version)?,
         loader,
-        &server_loader.loader_version().await.unwrap_or(version.clone()),
+        &server_loader
+            .loader_version()
+            .await
+            .unwrap_or(version.clone()),
     );
 
     println!("Downloading server version...");

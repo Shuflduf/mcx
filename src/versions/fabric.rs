@@ -1,5 +1,5 @@
 use super::{Downloadable, Loader, LoaderFuture, VersionProvider};
-use crate::versions::DownloadError;
+use crate::config;
 use inquire::Select;
 use serde_json::Value;
 use std::{fs::File, future::Future, io::Write, pin::Pin};
@@ -45,13 +45,12 @@ impl VersionProvider for Fabric {
         Box::pin(async {
             Some(
                 Select::new("Fabric version: ", fabric_versions().await.unwrap())
-                .prompt()
-                .unwrap()
+                    .prompt()
+                    .unwrap(),
             )
         })
     }
 }
-
 impl Downloadable for Fabric {
     fn download<'a>(
         &'a self,
@@ -59,35 +58,14 @@ impl Downloadable for Fabric {
         path: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>> + Send + 'a>> {
         Box::pin(async move {
-            let json_data = versions_json().await?;
+            let mut loader_version = config::get_value(path, "loader_version");
+            loader_version.remove_matches("\"");
 
-            // Find version data
-            let version_data = json_data["versions"]
-                .as_array()
-                .ok_or_else(|| {
-                    DownloadError::InvalidMetadata("versions array not found".to_string())
-                })?
-                .iter()
-                .find(|v| v["id"].as_str() == Some(version))
-                .ok_or_else(|| DownloadError::VersionNotFound(version.to_string()))?;
-
-            // Get metadata URL
-            let metadata_url = version_data["url"].as_str().ok_or_else(|| {
-                DownloadError::InvalidMetadata("metadata URL not found".to_string())
-            })?;
-
-            // Download and parse metadata
-            println!("Downloading version info from: {metadata_url}");
-            let metadata = reqwest::get(metadata_url).await?.text().await?;
-
-            let parsed_metadata: Value = serde_json::from_str(&metadata)?;
-
-            // Get jar URL and download jar
-            let jar_url = parsed_metadata["downloads"]["server"]["url"]
-                .as_str()
-                .ok_or_else(|| {
-                    DownloadError::InvalidMetadata("jar URL not found in metadata".to_string())
-                })?;
+            // Get jar url
+            let jar_url = format!(
+                "https://meta.fabricmc.net/v2/versions/loader/{}/{}/1.0.3/server/jar",
+                version, loader_version
+            );
 
             println!("Downloading server jar from: {jar_url}");
             let jar = reqwest::get(jar_url).await?.bytes().await?;

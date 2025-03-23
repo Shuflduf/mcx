@@ -58,7 +58,6 @@ impl VersionProvider for Neoforge {
             Ok(format!("1.{}", split))
         }
     }
-
 }
 
 impl Downloadable for Neoforge {
