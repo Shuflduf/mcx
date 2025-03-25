@@ -18,25 +18,28 @@ pub async fn add(token: &str) -> Result<(), Box<dyn std::error::Error>> {
     if fs::create_dir("mods").is_err() {
         println!("Mods directory already exists, skipping creation.");
     }
-    let mut file = File::create(format!(
-        "mods/{}",
-        download_url
-            .rsplit_once('/')
-            .map(|(_, filename)| filename.to_string())
-            .unwrap_or("mod.jar".to_string())
-    ))?;
+
+    let filename = download_url
+        .rsplit_once('/')
+        .map(|(_, filename)| filename.to_string())
+        .unwrap_or("mod.jar".to_string());
+    let mut file = File::create(format!("mods/{}", filename))?;
     file.write_all(&data)?;
     println!("Mod downloaded succesfully");
+
+    config::add_mod(".", token, token, true, &filename);
 
     Ok(())
 }
 
 async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let server_version = config::get_value(".", "version");
+    let server_version = config::get_value(".", "mc_version");
 
     let search_url = format!(
-        "https://api.modrinth.com/v2/project/{}/version?game_versions=[{}]",
-        token, server_version
+        "https://api.modrinth.com/v2/project/{}/version?game_versions=[{}]&loaders=[{}]",
+        token,
+        server_version,
+        config::get_value(".", "loader").to_lowercase() //"fabric"
     );
 
     println!("Searching for mod at {}", search_url);
