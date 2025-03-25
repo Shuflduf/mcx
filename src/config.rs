@@ -53,14 +53,23 @@ pub fn add_mod(path: &str, id: &str, name: &str, online: bool, file_path: &str) 
     )
     .unwrap();
 
-    config.mods.insert(id.to_string(), Mod {
-        name: name.to_string(),
-        online,
-        file_path: file_path.to_string(),
-    });
+    config.mods.insert(
+        id.to_string(),
+        Mod {
+            name: name.to_string(),
+            online,
+            file_path: file_path.to_string(),
+        },
+    );
 
     let toml_string = toml::to_string(&config).unwrap();
-    fs::write(format!("{}/mcx.toml", path), toml_string)
-        .expect("Error writing configuration file");
+    fs::write(format!("{}/mcx.toml", path), toml_string).expect("Error writing configuration file");
 }
 
+pub fn list_mods() -> Vec<String> {
+    let config: Config =
+        toml::from_str(&fs::read_to_string("mcx.toml").expect("Error reading configuration file"))
+            .unwrap();
+
+    config.mods.values().map(|_mod| _mod.name.clone()).collect()
+}

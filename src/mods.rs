@@ -6,15 +6,15 @@ use std::{
 use crate::config;
 
 pub async fn add(token: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let download_url = if token.starts_with("https://") {
-        token
+    let (download_url, online) = if token.starts_with("https://") {
+        (token.to_string(), false)
     } else {
-        &get_url_from_token(token).await?
+        (get_url_from_token(token).await?, true)
     };
 
     println!("Downloading mod from {}", download_url);
 
-    let data = reqwest::get(download_url).await?.bytes().await?;
+    let data = reqwest::get(&download_url).await?.bytes().await?;
     if fs::create_dir("mods").is_err() {
         println!("Mods directory already exists, skipping creation.");
     }
@@ -27,9 +27,24 @@ pub async fn add(token: &str) -> Result<(), Box<dyn std::error::Error>> {
     file.write_all(&data)?;
     println!("Mod downloaded succesfully");
 
-    config::add_mod(".", token, token, true, &filename);
+    println!("Adding mod to configuration file");
+    let mod_name = if online {
+        get_mod_name(token).await?
+    } else {
+        filename.clone()
+    };
+    config::add_mod(".", token, &mod_name, online, &filename);
 
     Ok(())
+}
+
+async fn get_mod_name(token: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let search_url = format!("https://api.modrinth.com/v2/project/{}", token);
+    let response = reqwest::get(search_url).await?.text().await?;
+
+    let response_json: serde_json::Value = serde_json::from_str(&response)?;
+
+    Ok(response_json["title"].as_str().unwrap().to_string())
 }
 
 async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -47,7 +62,7 @@ async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::E
 
     let response_json: serde_json::Value = serde_json::from_str(&response)?;
 
-    println!("JSON: {}", response_json);
+    //println!("JSON: {}", response_json);
     let download_url = response_json[0]["files"][0]["url"].as_str().unwrap();
 
     println!("Found mod at {}", download_url);
@@ -55,10 +70,14 @@ async fn get_url_from_token(token: &str) -> Result<String, Box<dyn std::error::E
 }
 
 pub async fn list() -> Result<(), Box<dyn std::error::Error>> {
-    let mods = fs::read_dir("mods")?;
-    for mod_file in mods {
-        let mod_file = mod_file?;
-        println!("> {}", mod_file.file_name().into_string().unwrap());
+    let mods = config::list_mods();
+    if mods.is_empty() {
+        println!("No mods found");
+    } else {
+        println!("Mods:");
+        for mod_ in mods {
+            println!("> {}", mod_);
+        }
     }
 
     Ok(())
