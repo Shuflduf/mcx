@@ -5,6 +5,7 @@ mod init;
 mod loaders;
 mod run;
 
+// #[tokio::main]
 fn main() -> Result<()> {
     color_eyre::install()?;
     match cli::parse_arguments()? {
