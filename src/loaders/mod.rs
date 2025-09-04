@@ -1,8 +1,9 @@
 use color_eyre::eyre::Result;
 
-use crate::loaders::{fabric::FabricLoader, vanilla::VanillaLoader};
+use crate::loaders::{fabric::FabricLoader, neoforge::NeoforgeLoader, vanilla::VanillaLoader};
 
 pub mod fabric;
+pub mod neoforge;
 pub mod vanilla;
 
 pub trait MCLoader {
@@ -18,6 +19,7 @@ pub fn from_name(name: &str) -> Box<dyn MCLoader> {
     match name {
         "Fabric" => Box::new(FabricLoader::default()),
         "Vanilla" => Box::new(VanillaLoader::default()),
+        "NeoForge" => Box::new(NeoforgeLoader::default()),
         _ => todo!(),
     }
 }

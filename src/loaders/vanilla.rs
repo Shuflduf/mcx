@@ -1,4 +1,4 @@
-use crate::{init::download_server_file, loaders::MCLoader};
+use crate::{init, loaders::MCLoader};
 use color_eyre::eyre::{OptionExt, Result};
 use serde::Deserialize;
 
@@ -37,7 +37,7 @@ impl MCLoader for VanillaLoader {
         println!("{metadata_url}");
         let jar_url = jar_url_getter::get_jar_url(metadata_url.to_string())?;
         println!("{jar_url}");
-        download_server_file(jar_url)?;
+        init::download_server_file(jar_url)?;
         Ok(())
     }
 }

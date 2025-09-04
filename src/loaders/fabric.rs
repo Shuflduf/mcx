@@ -1,7 +1,10 @@
 use color_eyre::eyre::Result;
 use serde::Deserialize;
 
-use crate::loaders::{include_snapshots, MCLoader};
+use crate::{
+    init,
+    loaders::{include_snapshots, MCLoader},
+};
 
 #[derive(Deserialize)]
 struct GameVersion {
@@ -26,8 +29,21 @@ impl MCLoader for FabricLoader {
         self.game_version = inquire::Select::new("Version", game_versions).prompt()?;
 
         let loader_versions_list = version_getter::get_loader_versions()?;
-        println!("{}", loader_versions_list[0].version);
+        let loader_versions = loader_versions_list
+            .iter()
+            .map(|v| v.version.clone())
+            .collect();
 
+        self.loader_version = inquire::Select::new("Loader Version", loader_versions).prompt()?;
+        Ok(())
+    }
+    fn download_server_jar(&mut self) -> Result<()> {
+        let jar_url = format!(
+            "https://meta.fabricmc.net/v2/versions/loader/{}/{}/{}/server/jar",
+            self.game_version, self.loader_version, "1.1.0"
+        );
+        println!("{jar_url}");
+        init::download_server_file(jar_url)?;
         Ok(())
     }
 }
@@ -47,18 +63,19 @@ mod version_getter {
         versions: Vec<GameVersion>,
     }
 
+    fn make_fabric_req(url: &str) -> Result<FabricResponse> {
+        let raw_response = reqwest::blocking::get(url)?.text()?;
+        let response: FabricResponse = serde_json::from_str(&raw_response)?;
+        Ok(response)
+    }
+
     pub fn get_mc_versions() -> Result<Vec<GameVersion>> {
         let url = "https://meta.fabricmc.net/v2/versions/game";
-        let raw_response = reqwest::blocking::get(url)?.text()?;
-        println!("{raw_response}");
-        let response: FabricResponse = serde_json::from_str(&raw_response)?;
-        Ok(response.versions)
+        Ok(make_fabric_req(url)?.versions)
     }
 
     pub fn get_loader_versions() -> Result<Vec<GameVersion>> {
         let url = "https://meta.fabricmc.net/v2/versions/loader";
-        let raw_response = reqwest::blocking::get(url)?.text()?;
-        let response: FabricResponse = serde_json::from_str(&raw_response)?;
-        Ok(response.versions)
+        Ok(make_fabric_req(url)?.versions)
     }
 }
