@@ -1,8 +1,3 @@
-use std::{
-    fs,
-    io::{Read, Write},
-};
-
 use crate::loaders;
 use color_eyre::eyre::Result;
 
@@ -19,7 +14,7 @@ pub fn setup_server() -> Result<()> {
 }
 
 pub fn download_server_file(url: String) -> Result<()> {
-    let file_contents = reqwest::get(url).;
-    println!("{file_contents:?}");
+    let file_contents = reqwest::blocking::get(url)?.bytes()?;
+    println!("file download {:?}", file_contents[0]);
     Ok(())
 }

@@ -3,7 +3,7 @@ use color_eyre::eyre::{OptionExt, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize, Clone)]
-pub struct GameVersion {
+struct GameVersion {
     id: String,
     #[serde(rename = "type")]
     version_type: String,
@@ -17,8 +17,8 @@ pub struct VanillaLoader {
 }
 
 impl MCLoader for VanillaLoader {
-    async fn setup_versions(&mut self) -> Result<()> {
-        self.versions_list = version_getter::get_mc_versions().await?;
+    fn setup_versions(&mut self) -> Result<()> {
+        self.versions_list = version_getter::get_mc_versions()?;
         filter_snapshots(&mut self.versions_list, include_snapshots()?);
         self.version = inquire::Select::new(
             "Version",
@@ -36,7 +36,8 @@ impl MCLoader for VanillaLoader {
             .url;
         println!("{metadata_url}");
         let jar_url = jar_url_getter::get_jar_url(metadata_url.to_string())?;
-        download_server_file(jar_url);
+        println!("{jar_url}");
+        download_server_file(jar_url)?;
         Ok(())
     }
 }
@@ -62,9 +63,9 @@ mod version_getter {
         versions: Vec<GameVersion>,
     }
 
-    pub async fn get_mc_versions() -> Result<Vec<GameVersion>> {
+    pub fn get_mc_versions() -> Result<Vec<GameVersion>> {
         let url = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-        let raw_response = reqwest::get(url).await?.text().await?;
+        let raw_response = reqwest::blocking::get(url)?.text()?;
         let response: MojangResponse = serde_json::from_str(&raw_response)?;
         Ok(response.versions)
     }
@@ -88,8 +89,8 @@ mod jar_url_getter {
         downloads: JarUrls,
     }
 
-    pub async fn get_jar_url(metadata_url: String) -> Result<String> {
-        let raw_response = reqwest::get(metadata_url).await?.text().await?;
+    pub fn get_jar_url(metadata_url: String) -> Result<String> {
+        let raw_response = reqwest::blocking::get(metadata_url)?.text()?;
         let response: VersionMetadata = serde_json::from_str(&raw_response)?;
         Ok(response.downloads.server.url)
     }

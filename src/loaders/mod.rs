@@ -6,7 +6,7 @@ pub mod fabric;
 pub mod vanilla;
 
 pub trait MCLoader {
-    async fn setup_versions(&mut self) -> Result<()> {
+    fn setup_versions(&mut self) -> Result<()> {
         todo!()
     }
     fn download_server_jar(&mut self) -> Result<()> {
@@ -16,8 +16,14 @@ pub trait MCLoader {
 
 pub fn from_name(name: &str) -> Box<dyn MCLoader> {
     match name {
-        "Fabric" => Box::new(FabricLoader {}),
+        "Fabric" => Box::new(FabricLoader::default()),
         "Vanilla" => Box::new(VanillaLoader::default()),
         _ => todo!(),
     }
+}
+
+fn include_snapshots() -> Result<bool> {
+    Ok(inquire::Confirm::new("Include Snapshots?")
+        .with_default(false)
+        .prompt()?)
 }
