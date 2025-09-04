@@ -1,5 +1,5 @@
 use crate::loaders::MCLoader;
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::Result;
 
 #[derive(Default)]
 pub struct NeoforgeLoader {
@@ -15,7 +15,7 @@ impl MCLoader for NeoforgeLoader {
     }
 }
 
-fn neoforge_version_into_game_version(neoforge_version: &String) -> String {
+fn neoforge_version_into_game_version(neoforge_version: &str) -> String {
     neoforge_version.rsplit_once(".").unwrap().0.to_string() + "1."
 }
 
@@ -31,8 +31,7 @@ fn get_mc_versions(loader_versions: &[String], include_betas: bool) -> Vec<Strin
     let mut loader_versions: Vec<String> = loader_versions
         .iter()
         .filter(|v| include_betas || !v.ends_with("-beta"))
-        .map(|v| v.rsplit_once(".").unwrap().0)
-        .map(|v| v.to_string())
+        .map(|v| neoforge_version_into_game_version(v))
         .collect();
     loader_versions.dedup();
     loader_versions
