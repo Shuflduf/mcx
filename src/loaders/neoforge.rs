@@ -1,4 +1,4 @@
-use crate::loaders::MCLoader;
+use crate::{init, loaders::MCLoader};
 use color_eyre::eyre::Result;
 
 #[derive(Default)]
@@ -18,6 +18,15 @@ impl MCLoader for NeoforgeLoader {
         )
         .prompt()?;
         println!("{} {}", self.game_version, self.loader_version);
+        Ok(())
+    }
+    fn download_server_jar(&mut self) -> Result<()> {
+        let jar_url = format!(
+            "https://maven.neoforged.net/releases/net/neoforged/neoforge/{}/neoforge-{}-installer.jar",
+            self.loader_version, self.loader_version
+        );
+        println!("{jar_url}");
+        init::download_server_file(jar_url)?;
         Ok(())
     }
 }

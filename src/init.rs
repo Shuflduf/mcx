@@ -1,3 +1,5 @@
+use std::{fs::File, io::copy};
+
 use crate::loaders;
 use color_eyre::eyre::Result;
 
@@ -14,7 +16,8 @@ pub fn setup_server() -> Result<()> {
 }
 
 pub fn download_server_file(url: String) -> Result<()> {
-    let file_contents = reqwest::blocking::get(url)?.bytes()?;
-    println!("file download {:?}", file_contents[0]);
+    let mut response = reqwest::blocking::get(url)?;
+    let mut file = File::create("server.jar")?;
+    copy(&mut response, &mut file)?;
     Ok(())
 }

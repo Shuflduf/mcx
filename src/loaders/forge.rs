@@ -82,9 +82,8 @@ mod version_getter {
     }
 
     pub fn get_versions() -> Result<HashMap<String, String>> {
-        // let url = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
-        // let raw_response = reqwest::blocking::get(url)?.text()?;
-        let raw_response = std::fs::read_to_string("src/responses/forge.json")?;
+        let url = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
+        let raw_response = reqwest::blocking::get(url)?.text()?;
         let response: ForgeResponse = serde_json::from_str(&raw_response)?;
         Ok(response.promos)
     }
