@@ -1,0 +1,15 @@
+# example mcx.toml
+[version_info]
+name = "Fabric"
+game_version = "1.20.1"
+version = "0.17.2"
+
+[[mods]]
+name = "Create Fabric"
+slug = "create-fabric"
+version = "2024-12-11T14:53:30.744140Z"
+
+[[mods]]
+name = "Sodium"
+slug = "sodium"
+version = "2025-03-03T17:45:49.132919Z"

@@ -4,6 +4,7 @@ mod cli;
 mod config;
 mod init;
 mod loaders;
+mod modrinth;
 mod run;
 
 // #[tokio::main]
