@@ -1,6 +1,7 @@
 use color_eyre::eyre::Result;
 
 mod cli;
+mod config;
 mod init;
 mod loaders;
 mod run;
