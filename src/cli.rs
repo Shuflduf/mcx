@@ -2,13 +2,10 @@ use clap::{Parser, Subcommand};
 use color_eyre::eyre::{OptionExt, Result};
 use strum_macros::Display;
 
-#[derive(Parser)]
-#[command(author = "Shuflduf")]
-#[command(version = env!("CARGO_PKG_VERSION"))]
-#[command(about = "Command Line Interface to create and manage Minecraft servers")]
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Command>,
+#[derive(Subcommand, Display, Debug)]
+pub enum ModSubcommand {
+    Add,
+    Info,
 }
 
 #[derive(Subcommand, Display)]
@@ -17,11 +14,20 @@ pub enum Command {
     Init,
     /// Run the Minecraft server
     Run,
-    // Manage mods for your Minecraft server
-    // Mod {
-    //     #[command(subcommand)]
-    //     command: Option<ModSubcommand>,
-    // },
+    /// Manage mods for your Minecraft server
+    Mod {
+        #[command(subcommand)]
+        command: Option<ModSubcommand>,
+    },
+}
+
+#[derive(Parser)]
+#[command(author = "Shuflduf")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
+#[command(about = "Command Line Interface to create and manage Minecraft servers")]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
 }
 
 pub fn parse_arguments() -> Result<Command> {
