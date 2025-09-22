@@ -1,4 +1,4 @@
-use crate::config::{self, LoaderName};
+use crate::config::{self, LoaderName, ModInfo};
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::Deserialize;
@@ -29,8 +29,24 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
         "fabric",
         "1.20.1"
     );
-    let modrinth_response = reqwest::blocking::get(req_url)?.text()?;
+    // println!("{:?}", reqwest::blocking::get(&req_url));
+    let resp = reqwest::blocking::get(&req_url)?;
+    if let Err(e) = resp.error_for_status_ref() {
+        if e.status() == Some(reqwest::StatusCode::NOT_FOUND) {
+            return Err(eyre!("Mod \"{}\" not found", slug));
+        }
+        return Err(e.into());
+    }
+    let modrinth_response = resp.text()?;
+    println!("{req_url}");
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
+    // let target_version = &versions[0];
+    let version_info = ModInfo {
+        name: "Test".into(),
+        slug: Some("test".into()),
+        version_date: None,
+    };
+    config::add_mod(version_info)?;
     println!(
         "modrinth {:?}",
         versions
@@ -44,5 +60,8 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
 mod urls {
     pub fn list_project_versions(slug: &str) -> String {
         format!("https://api.modrinth.com/v2/project/{slug}/version")
+    }
+    pub fn get_project_info(slug: &str) -> String {
+        format!("https://api.modrinth.com/v2/project/{slug}")
     }
 }

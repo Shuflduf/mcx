@@ -1,4 +1,8 @@
-use crate::{init, loaders::MCLoader};
+use crate::{
+    config::{self, VersionInfo},
+    init,
+    loaders::MCLoader,
+};
 use color_eyre::eyre::{OptionExt, Result};
 use serde::Deserialize;
 
@@ -25,6 +29,11 @@ impl MCLoader for VanillaLoader {
             self.versions_list.iter().map(|v| v.id.clone()).collect(),
         )
         .prompt()?;
+        config::create_config(VersionInfo {
+            name: config::LoaderName::Vanilla,
+            game_version: self.version.clone(),
+            loader_version: None,
+        })?;
         Ok(())
     }
     fn download_server_jar(&mut self) -> Result<()> {

@@ -11,7 +11,8 @@ pub fn setup_server() -> Result<()> {
     .prompt()?;
     let mut loader = loaders::from_name(loader_name);
     loader.setup_versions()?;
-    loader.download_server_jar()?;
+    // loader.download_server_jar()?;
+    println!("JAR DOWNLOADING TEMP DISABLED");
     Ok(())
 }
 
