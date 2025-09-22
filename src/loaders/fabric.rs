@@ -2,6 +2,7 @@ use color_eyre::eyre::Result;
 use serde::Deserialize;
 
 use crate::{
+    config::{self, VersionInfo},
     init,
     loaders::{include_snapshots, MCLoader},
 };
@@ -35,6 +36,11 @@ impl MCLoader for FabricLoader {
             .collect();
 
         self.loader_version = inquire::Select::new("Loader Version", loader_versions).prompt()?;
+        config::create_config(VersionInfo {
+            name: config::LoaderName::Fabric,
+            game_version: self.game_version.clone(),
+            loader_version: Some(self.loader_version.clone()),
+        })?;
         Ok(())
     }
     fn download_server_jar(&mut self) -> Result<()> {

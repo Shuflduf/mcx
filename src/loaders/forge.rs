@@ -2,7 +2,11 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use color_eyre::eyre::Result;
 
-use crate::{init, loaders::MCLoader};
+use crate::{
+    config::{self, VersionInfo},
+    init,
+    loaders::MCLoader,
+};
 
 #[derive(Default)]
 pub struct ForgeLoader {
@@ -21,6 +25,11 @@ impl MCLoader for ForgeLoader {
             filter_loader_versions(&versions_map, &self.game_version),
         )
         .prompt()?;
+        config::create_config(VersionInfo {
+            name: config::LoaderName::Forge,
+            game_version: self.game_version.clone(),
+            loader_version: Some(self.loader_version.clone()),
+        })?;
         Ok(())
     }
     fn download_server_jar(&mut self) -> Result<()> {

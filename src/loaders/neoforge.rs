@@ -1,4 +1,8 @@
-use crate::{init, loaders::MCLoader};
+use crate::{
+    config::{self, VersionInfo},
+    init,
+    loaders::MCLoader,
+};
 use color_eyre::eyre::Result;
 
 #[derive(Default)]
@@ -17,6 +21,11 @@ impl MCLoader for NeoforgeLoader {
             filter_loader_versions(&loader_versions, &self.game_version)?,
         )
         .prompt()?;
+        config::create_config(VersionInfo {
+            name: config::LoaderName::NeoForge,
+            game_version: self.game_version.clone(),
+            loader_version: Some(self.loader_version.clone()),
+        })?;
         println!("{} {}", self.game_version, self.loader_version);
         Ok(())
     }
