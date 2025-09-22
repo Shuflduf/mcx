@@ -9,7 +9,7 @@ readme = "README.md"
 repository = "https://github.com/Shuflduf/mcx"
 
 [dependencies]
-chrono = "0.4.42"
+chrono = { version = "0.4.42", features = ["serde"] }
 clap = { version = "4.5.46", features = ["derive"] }
 color-eyre = "0.6.5"
 inquire = "0.9.1"

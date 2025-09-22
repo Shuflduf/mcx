@@ -4,8 +4,9 @@ use strum_macros::Display;
 
 #[derive(Subcommand, Display, Debug)]
 pub enum ModSubcommand {
-    Add,
-    Info,
+    Add { id: String },
+    List,
+    Update,
 }
 
 #[derive(Subcommand, Display)]
