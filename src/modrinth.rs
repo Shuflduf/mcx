@@ -71,6 +71,9 @@ pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
         "Downloading".bold().green(),
         project_info.title
     );
+    for dep in &target_version.dependencies {
+        download_from_id(&dep.project_id, dependency_level + 1)?;
+    }
     mods::download_mod_jar(&target_version.files[0].url, &project_info.slug)?;
     let mod_info = ModInfo {
         name: project_info.title,
