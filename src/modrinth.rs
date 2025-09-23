@@ -49,7 +49,7 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
     let mod_info = ModInfo {
         name: get_mod_name(slug)?,
         id: slug.into(),
-        version_date: DateTime::from_timestamp_secs(0).unwrap(),
+        version_date: target_version.date_published,
     };
     config::add_mod(mod_info)?;
     println!(
