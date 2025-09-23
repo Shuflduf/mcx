@@ -12,6 +12,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 struct ProjectInfo {
     title: String,
+    slug: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -22,59 +23,58 @@ struct ModFile {
 }
 
 #[derive(Debug, Deserialize)]
+struct ModDependency {
+    project_id: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct ModVersion {
     date_published: DateTime<Utc>,
     files: Vec<ModFile>,
+    dependencies: Vec<ModDependency>,
 }
 
-// also supports downloading from project id
-pub fn download_from_slug(slug: &str, dependency_level: usize) -> Result<()> {
+pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
     let version_info = config::get_version_info()?;
     if version_info.name == LoaderName::Vanilla {
         return Err(eyre!("Mods are not supported for Vanilla"));
     }
-    if config::has_mod(slug)? {
+    let project_info = get_mod_info(id)?;
+    if config::has_mod(&project_info.slug)? {
         if dependency_level == 0 {
-            return Err(eyre!("Mod \"{slug}\" already installed"));
+            return Err(eyre!("Mod \"{}\" already installed", project_info.title));
         }
         return Ok(());
     }
     let req_url = format!(
         "{}?loaders=[\"{}\"]&game_versions=[\"{}\"]",
-        urls::list_project_versions(slug),
+        urls::list_project_versions(&project_info.slug),
         format!("{:?}", version_info.name).to_lowercase(),
         version_info.game_version
     );
     // println!("{:?}", reqwest::blocking::get(&req_url));
-    let resp = reqwest::blocking::get(&req_url)?;
-    if let Err(e) = resp.error_for_status_ref() {
-        if e.status() == Some(reqwest::StatusCode::NOT_FOUND) {
-            return Err(eyre!("Mod \"{}\" does not exist", slug));
-        }
-        return Err(e.into());
-    }
-    let modrinth_response = resp.text()?;
+    let modrinth_response = reqwest::blocking::get(&req_url)?.text()?;
     println!("{req_url}");
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
     if versions.is_empty() {
         return Err(eyre!(
             "Mod \"{}\" not found for {:?} {}",
-            slug,
+            project_info.title,
             version_info.name,
             version_info.game_version
         ));
     }
     let target_version = &versions[0];
-    let mod_name = get_mod_name(slug)?;
     println!(
-        "  {}{} {mod_name}",
+        "  {}{} {}",
         "  ".repeat(dependency_level),
-        "Downloading".bold().green()
+        "Downloading".bold().green(),
+        project_info.title
     );
-    mods::download_mod_jar(&target_version.files[0].url, slug)?;
+    mods::download_mod_jar(&target_version.files[0].url, &project_info.slug)?;
     let mod_info = ModInfo {
-        name: mod_name,
-        id: slug.into(),
+        name: project_info.title,
+        id: project_info.slug,
         version_date: target_version.date_published,
     };
     config::add_mod(mod_info)?;
@@ -88,11 +88,17 @@ pub fn download_from_slug(slug: &str, dependency_level: usize) -> Result<()> {
     Ok(())
 }
 
-fn get_mod_name(slug: &str) -> Result<String> {
-    let url = urls::get_project_info(slug);
-    let resp = reqwest::blocking::get(url)?.text()?;
-    let project_info: ProjectInfo = serde_json::from_str(&resp)?;
-    Ok(project_info.title)
+fn get_mod_info(id: &str) -> Result<ProjectInfo> {
+    let url = urls::get_project_info(id);
+    let resp = reqwest::blocking::get(&url)?;
+    if let Err(e) = resp.error_for_status_ref() {
+        if e.status() == Some(reqwest::StatusCode::NOT_FOUND) {
+            return Err(eyre!("Mod \"{}\" does not exist", id));
+        }
+        return Err(e.into());
+    }
+    let project_info: ProjectInfo = serde_json::from_str(&resp.text()?)?;
+    Ok(project_info)
 }
 
 mod urls {

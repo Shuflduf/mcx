@@ -5,7 +5,7 @@ use crate::{cli::ModSubcommand, modrinth};
 pub fn handle_command(command: Option<ModSubcommand>) -> Result<()> {
     println!("{command:?}");
     if let Some(ModSubcommand::Add { id }) = command {
-        modrinth::download_from_slug(&id, 0)?;
+        modrinth::download_from_id(&id, 0)?;
     }
     Ok(())
 }
