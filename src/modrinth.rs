@@ -3,15 +3,19 @@ use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
+struct ProjectInfo {
+    title: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct ModFile {
     url: String,
-    filename: String,
     #[allow(dead_code)]
     size: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 struct ModVersion {
     date_published: DateTime<Utc>,
     files: Vec<ModFile>,
@@ -26,8 +30,8 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
     let req_url = format!(
         "{}?loaders=[\"{}\"]&game_versions=[\"{}\"]",
         urls::list_project_versions(slug),
-        "fabric",
-        "1.20.1"
+        format!("{:?}", version_info.name).to_lowercase(),
+        version_info.game_version
     );
     // println!("{:?}", reqwest::blocking::get(&req_url));
     let resp = reqwest::blocking::get(&req_url)?;
@@ -40,13 +44,14 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
     let modrinth_response = resp.text()?;
     println!("{req_url}");
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
-    // let target_version = &versions[0];
-    let version_info = ModInfo {
-        name: "Test".into(),
-        slug: Some("test".into()),
-        version_date: None,
+    let target_version = &versions[0];
+    println!("{target_version:?}");
+    let mod_info = ModInfo {
+        name: get_mod_name(slug)?,
+        id: slug.into(),
+        version_date: DateTime::from_timestamp_secs(0).unwrap(),
     };
-    config::add_mod(version_info)?;
+    config::add_mod(mod_info)?;
     println!(
         "modrinth {:?}",
         versions
@@ -55,6 +60,13 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
             .collect::<Vec<_>>()
     );
     Ok(())
+}
+
+fn get_mod_name(slug: &str) -> Result<String> {
+    let url = urls::get_project_info(slug);
+    let resp = reqwest::blocking::get(url)?.text()?;
+    let project_info: ProjectInfo = serde_json::from_str(&resp)?;
+    Ok(project_info.title)
 }
 
 mod urls {

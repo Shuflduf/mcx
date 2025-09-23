@@ -1,13 +1,13 @@
 use std::{
     fs::{self, File},
-    io::{copy, Write},
+    io::Write,
 };
 
 use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub enum LoaderName {
     Vanilla,
     Fabric,
@@ -15,34 +15,38 @@ pub enum LoaderName {
     NeoForge,
     Quilt,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct VersionInfo {
     pub name: LoaderName,
     pub game_version: String,
     pub loader_version: Option<String>,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ModInfo {
     pub name: String,
-    pub slug: Option<String>,
-    pub version_date: Option<DateTime<Utc>>,
+    pub id: String,
+    pub version_date: DateTime<Utc>,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct MCXConfig {
     version_info: VersionInfo,
     mods: Option<Vec<ModInfo>>,
 }
 
+fn write_config(config: MCXConfig) -> Result<()> {
+    let mut file = File::create("mcx.toml")?;
+    file.write_all(toml::to_string(&config)?.as_bytes())?;
+    Ok(())
+}
+
 pub fn get_version_info() -> Result<VersionInfo> {
-    Ok(VersionInfo {
-        name: LoaderName::Fabric,
-        game_version: "1.20.1".into(),
-        loader_version: Some("0.17.2".into()),
-    })
+    Ok(get_config()?.version_info)
 }
 
 pub fn add_mod(new_mod: ModInfo) -> Result<()> {
-    get_config()?;
+    let mut conf = get_config()?;
+    conf.mods.get_or_insert_with(Vec::new).push(new_mod);
+    write_config(conf)?;
     Ok(())
 }
 
@@ -51,8 +55,7 @@ pub fn create_config(version_info: VersionInfo) -> Result<()> {
         version_info,
         mods: None,
     };
-    let mut file = File::create("mcx.toml")?;
-    file.write_all(toml::to_string(&new_conf)?.as_bytes())?;
+    write_config(new_conf)?;
     Ok(())
 }
 
@@ -62,9 +65,12 @@ fn get_config() -> Result<MCXConfig> {
             "mcx.toml not found. Create a new server by running `mcx init`."
         ));
     }
-    Ok(MCXConfig {
-        version_info: get_version_info()?,
-        mods: Some(vec![]),
-    })
+    let file_contents = fs::read_to_string("mcx.toml")?;
+    let conf: MCXConfig = toml::from_str(&file_contents)?;
+    // Ok(MCXConfig {
+    //     version_info: get_version_info()?,
+    //     mods: Some(vec![]),
+    // })
     // let file_data = fs::read_to_string
+    Ok(conf)
 }
