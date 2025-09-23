@@ -37,28 +37,35 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
     let resp = reqwest::blocking::get(&req_url)?;
     if let Err(e) = resp.error_for_status_ref() {
         if e.status() == Some(reqwest::StatusCode::NOT_FOUND) {
-            return Err(eyre!("Mod \"{}\" not found", slug));
+            return Err(eyre!("Mod \"{}\" does not exist", slug));
         }
         return Err(e.into());
     }
     let modrinth_response = resp.text()?;
     println!("{req_url}");
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
+    if versions.is_empty() {
+        return Err(eyre!(
+            "Mod \"{}\" not found for {:?} {}",
+            slug,
+            version_info.name,
+            version_info.game_version
+        ));
+    }
     let target_version = &versions[0];
-    println!("{target_version:?}");
     let mod_info = ModInfo {
         name: get_mod_name(slug)?,
         id: slug.into(),
         version_date: target_version.date_published,
     };
     config::add_mod(mod_info)?;
-    println!(
-        "modrinth {:?}",
-        versions
-            .iter()
-            .map(|v| v.files[0].url.clone())
-            .collect::<Vec<_>>()
-    );
+    // println!(
+    //     "modrinth {:#?}",
+    //     versions
+    //         .iter()
+    //         .map(|v| v.files[0].url.clone())
+    //         .collect::<Vec<_>>()
+    // );
     Ok(())
 }
 
