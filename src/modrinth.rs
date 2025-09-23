@@ -1,6 +1,12 @@
-use crate::config::{self, LoaderName, ModInfo};
+use crate::{
+    config::{self, LoaderName, ModInfo},
+    mods,
+};
 use chrono::{DateTime, Utc};
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::{
+    eyre::{eyre, Result},
+    owo_colors::OwoColorize,
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -22,10 +28,16 @@ struct ModVersion {
 }
 
 // also supports downloading from project id
-pub fn download_from_slug(slug: &str) -> Result<()> {
+pub fn download_from_slug(slug: &str, dependency_level: usize) -> Result<()> {
     let version_info = config::get_version_info()?;
     if version_info.name == LoaderName::Vanilla {
         return Err(eyre!("Mods are not supported for Vanilla"));
+    }
+    if config::has_mod(slug)? {
+        if dependency_level == 0 {
+            return Err(eyre!("Mod \"{slug}\" already installed"));
+        }
+        return Ok(());
     }
     let req_url = format!(
         "{}?loaders=[\"{}\"]&game_versions=[\"{}\"]",
@@ -53,8 +65,15 @@ pub fn download_from_slug(slug: &str) -> Result<()> {
         ));
     }
     let target_version = &versions[0];
+    let mod_name = get_mod_name(slug)?;
+    println!(
+        "  {}{} {mod_name}",
+        "  ".repeat(dependency_level),
+        "Downloading".bold().green()
+    );
+    mods::download_mod_jar(&target_version.files[0].url, slug)?;
     let mod_info = ModInfo {
-        name: get_mod_name(slug)?,
+        name: mod_name,
         id: slug.into(),
         version_date: target_version.date_published,
     };

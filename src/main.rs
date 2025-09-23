@@ -10,7 +10,10 @@ mod run;
 
 // #[tokio::main]
 fn main() -> Result<()> {
-    color_eyre::install()?;
+    color_eyre::config::HookBuilder::default()
+        .display_env_section(false)
+        .display_location_section(false)
+        .install()?;
     match cli::parse_arguments()? {
         cli::Command::Init => init::setup_server()?,
         cli::Command::Run => run::start_server()?,

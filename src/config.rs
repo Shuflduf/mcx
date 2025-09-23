@@ -39,6 +39,14 @@ fn write_config(config: MCXConfig) -> Result<()> {
     Ok(())
 }
 
+pub fn has_mod(id: &str) -> Result<bool> {
+    Ok(get_config()?
+        .mods
+        .unwrap_or_default()
+        .iter()
+        .any(|v| v.id == id))
+}
+
 pub fn get_version_info() -> Result<VersionInfo> {
     Ok(get_config()?.version_info)
 }
