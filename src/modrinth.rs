@@ -22,9 +22,19 @@ struct ModFile {
     size: u32,
 }
 
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+enum DependencyType {
+    Required,
+    Optional,
+    Incompatible,
+    Embedded,
+}
+
 #[derive(Debug, Deserialize)]
 struct ModDependency {
     project_id: String,
+    dependency_type: DependencyType,
 }
 
 #[derive(Debug, Deserialize)]
@@ -46,15 +56,19 @@ pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
         }
         return Ok(());
     }
+    println!(
+        "  {}{} {}",
+        "  ".repeat(dependency_level),
+        "Downloading".bold().green(),
+        project_info.title
+    );
     let req_url = format!(
         "{}?loaders=[\"{}\"]&game_versions=[\"{}\"]",
         urls::list_project_versions(&project_info.slug),
         format!("{:?}", version_info.name).to_lowercase(),
         version_info.game_version
     );
-    // println!("{:?}", reqwest::blocking::get(&req_url));
     let modrinth_response = reqwest::blocking::get(&req_url)?.text()?;
-    println!("{req_url}");
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
     if versions.is_empty() {
         return Err(eyre!(
@@ -65,14 +79,18 @@ pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
         ));
     }
     let target_version = &versions[0];
-    println!(
-        "  {}{} {}",
-        "  ".repeat(dependency_level),
-        "Downloading".bold().green(),
-        project_info.title
-    );
     for dep in &target_version.dependencies {
-        download_from_id(&dep.project_id, dependency_level + 1)?;
+        if dep.dependency_type == DependencyType::Required
+            || (dep.dependency_type == DependencyType::Optional
+                && inquire::Confirm::new(&format!(
+                    "Install optional dependency \"{}\"",
+                    get_mod_info(&dep.project_id)?.title
+                ))
+                .with_default(true)
+                .prompt()?)
+        {
+            download_from_id(&dep.project_id, dependency_level + 1)?;
+        }
     }
     mods::download_mod_jar(&target_version.files[0].url, &project_info.slug)?;
     let mod_info = ModInfo {
