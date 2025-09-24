@@ -1,0 +1,17 @@
+name: cargo-binstall
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-binstall:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and release binstall artifacts
+        uses: cargo-bins/cargo-binstall-release@v1
