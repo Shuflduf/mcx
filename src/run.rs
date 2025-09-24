@@ -25,7 +25,7 @@ pub fn start_server() -> Result<()> {
     std::process::Command::new("java")
         .arg("-jar")
         .arg("server.jar")
-        .arg("--headless")
+        .arg("--nogui")
         .spawn()
         .expect("Failed to start server.jar")
         .wait()?;
@@ -33,23 +33,28 @@ pub fn start_server() -> Result<()> {
 }
 
 fn verify_eula() -> Result<()> {
-    let content = std::fs::read_to_string("eula.txt")?;
-    let parsed: toml::Value = toml::from_str(&content)?;
-    let eula_accepted = parsed
-        .get("eula")
-        .and_then(toml::Value::as_bool)
-        .unwrap_or(false);
+    let eula_accepted = match std::fs::read_to_string("eula.txt") {
+        Ok(content) => toml::from_str::<toml::Value>(&content)
+            .ok()
+            .and_then(|parsed| parsed.get("eula").and_then(toml::Value::as_bool))
+            .unwrap_or(false),
+        Err(_) => false,
+    };
     if !eula_accepted {
-        let accepted = inquire::Confirm::new(
-            "Do you accept the Minecraft EULA? (https://aka.ms/MinecraftEULA)",
-        )
-        .with_default(true)
-        .prompt()?;
-        if !accepted {
-            return Err(eyre!("EULA not accepted"));
-        }
-        File::create("eula.txt")?.write_all(b"eula=true")?;
+        ask_eula()?;
     }
+    Ok(())
+}
+
+fn ask_eula() -> Result<()> {
+    let accepted =
+        inquire::Confirm::new("Do you accept the Minecraft EULA? (https://aka.ms/MinecraftEULA)")
+            .with_default(true)
+            .prompt()?;
+    if !accepted {
+        return Err(eyre!("EULA not accepted"));
+    }
+    File::create("eula.txt")?.write_all(b"eula=true")?;
     Ok(())
 }
 
