@@ -1,12 +1,10 @@
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Write;
 
 use color_eyre::{
     eyre::{eyre, Result},
     owo_colors::OwoColorize,
 };
-use toml::map::Map;
-use toml::Value;
 
 use crate::config::{self, ModInfo};
 
@@ -27,6 +25,7 @@ pub fn start_server() -> Result<()> {
     std::process::Command::new("java")
         .arg("-jar")
         .arg("server.jar")
+        .arg("--headless")
         .spawn()
         .expect("Failed to start server.jar")
         .wait()?;
@@ -36,7 +35,10 @@ pub fn start_server() -> Result<()> {
 fn verify_eula() -> Result<()> {
     let content = std::fs::read_to_string("eula.txt")?;
     let parsed: toml::Value = toml::from_str(&content)?;
-    let eula_accepted = parsed.get("eula").and_then(Value::as_bool).unwrap_or(false);
+    let eula_accepted = parsed
+        .get("eula")
+        .and_then(toml::Value::as_bool)
+        .unwrap_or(false);
     if !eula_accepted {
         let accepted = inquire::Confirm::new(
             "Do you accept the Minecraft EULA? (https://aka.ms/MinecraftEULA)",
