@@ -15,12 +15,14 @@ pub fn handle_command(command: ModSubcommand) -> Result<()> {
         ModSubcommand::Add { id } => modrinth::download_from_id(&id, 0)?,
         ModSubcommand::List => list_mods()?,
         ModSubcommand::Remove { id } => remove_mod(id)?,
-        _ => todo!(),
+        ModSubcommand::Update => modrinth::update_all_mods()?,
     }
     Ok(())
 }
 
 pub fn download_mod_jar(url: &str, name: &str) -> Result<()> {
+    println!("TEMP DISABLED");
+    return Ok(());
     fs::create_dir_all("mods")?;
     let mut new_mod_file = File::create(format!("mods/{name}.jar"))?;
     new_mod_file.write_all(&reqwest::blocking::get(url)?.bytes()?)?;

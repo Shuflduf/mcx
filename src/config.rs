@@ -7,6 +7,8 @@ use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::mods;
+
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub enum LoaderName {
     Vanilla,
@@ -93,7 +95,17 @@ pub fn remove_mod(id: &str) -> Result<()> {
     if let Some(mods) = &mut current_conf.mods {
         mods.retain(|v| id != v.id);
     }
-    println!("{current_conf:#?}");
+    write_config(current_conf)?;
+    Ok(())
+}
+
+pub fn update_mod(id: &str, date: &DateTime<Utc>) -> Result<()> {
+    let mut current_conf = get_config()?;
+    if let Some(mods) = &mut current_conf.mods {
+        if let Some(mod_info) = mods.iter_mut().find(|v| v.id == id) {
+            mod_info.version_date = *date;
+        }
+    }
     write_config(current_conf)?;
     Ok(())
 }

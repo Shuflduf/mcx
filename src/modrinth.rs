@@ -1,5 +1,5 @@
 use crate::{
-    config::{self, LoaderName, ModInfo},
+    config::{self, LoaderName, MCXConfig, ModInfo},
     mods,
 };
 use chrono::{DateTime, Utc};
@@ -44,6 +44,35 @@ struct ModVersion {
     dependencies: Vec<ModDependency>,
 }
 
+pub fn update_all_mods() -> Result<()> {
+    let conf = config::get_config()?;
+    let mods_list = conf.mods.unwrap_or_default();
+    let version_info = conf.version_info;
+    for target_mod in mods_list {
+        let req_url = urls::list_project_versions(
+            &target_mod.id,
+            &version_info.name,
+            &version_info.game_version,
+        );
+        let mod_versions: Vec<ModVersion> =
+            serde_json::from_str(&reqwest::blocking::get(req_url)?.text()?)?;
+        if mod_versions.is_empty() {
+            continue;
+        }
+        if mod_versions[0].date_published <= target_mod.version_date {
+            continue;
+        }
+        println!(
+            "NEW {} > {}",
+            mod_versions[0].date_published, target_mod.version_date
+        );
+        // this doesnt do deps stuff and i think it should
+        mods::download_mod_jar(&mod_versions[0].files[0].url, &target_mod.id)?;
+        config::update_mod(&target_mod.id, &mod_versions[0].date_published)?;
+    }
+    Ok(())
+}
+
 pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
     let version_info = config::get_version_info()?;
     if version_info.name == LoaderName::Vanilla {
@@ -62,11 +91,10 @@ pub fn download_from_id(id: &str, dependency_level: usize) -> Result<()> {
         "Downloading".bold().green(),
         project_info.title
     );
-    let req_url = format!(
-        "{}?loaders=[\"{}\"]&game_versions=[\"{}\"]",
-        urls::list_project_versions(&project_info.slug),
-        format!("{:?}", version_info.name).to_lowercase(),
-        version_info.game_version
+    let req_url = urls::list_project_versions(
+        &project_info.slug,
+        &version_info.name,
+        &version_info.game_version,
     );
     let modrinth_response = reqwest::blocking::get(&req_url)?.text()?;
     let versions: Vec<ModVersion> = serde_json::from_str(&modrinth_response)?;
@@ -123,8 +151,17 @@ fn get_mod_info(id: &str) -> Result<ProjectInfo> {
 }
 
 mod urls {
-    pub fn list_project_versions(slug: &str) -> String {
-        format!("https://api.modrinth.com/v2/project/{slug}/version")
+    use crate::config::LoaderName;
+
+    pub fn list_project_versions(
+        slug: &str,
+        loader_name: &LoaderName,
+        game_version: &str,
+    ) -> String {
+        format!(
+            "https://api.modrinth.com/v2/project/{slug}/version?loaders=[\"{}\"]&game_versions=[\"{game_version}\"]",
+            format!("{:?}", loader_name).to_lowercase(),
+        )
     }
     pub fn get_project_info(slug: &str) -> String {
         format!("https://api.modrinth.com/v2/project/{slug}")
