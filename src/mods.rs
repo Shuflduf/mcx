@@ -3,7 +3,10 @@ use std::{
     io::Write,
 };
 
-use color_eyre::{eyre::Result, owo_colors::OwoColorize};
+use color_eyre::{
+    eyre::{eyre, Result},
+    owo_colors::OwoColorize,
+};
 
 use crate::{cli::ModSubcommand, config, modrinth};
 
@@ -11,6 +14,7 @@ pub fn handle_command(command: ModSubcommand) -> Result<()> {
     match command {
         ModSubcommand::Add { id } => modrinth::download_from_id(&id, 0)?,
         ModSubcommand::List => list_mods()?,
+        ModSubcommand::Remove { id } => remove_mod(id)?,
         _ => todo!(),
     }
     Ok(())
@@ -32,6 +36,21 @@ fn list_mods() -> Result<()> {
     );
     for installed in all_installed {
         println!("    {} {}", "-".bold().green(), installed.name)
+    }
+    Ok(())
+}
+
+fn remove_mod(id: String) -> Result<()> {
+    // let mod_info = config::get
+    if !config::has_mod(&id)? {
+        return Err(eyre!("\"{id}\" not found"));
+    }
+    config::remove_mod(&id)?;
+    let mod_path = format!("mods/{id}.jar");
+    if fs::exists(&mod_path)? {
+        fs::remove_file(&mod_path)?;
+    } else {
+        return Err(eyre!("{id}.jar not found"));
     }
     Ok(())
 }

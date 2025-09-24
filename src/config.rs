@@ -21,7 +21,7 @@ pub struct VersionInfo {
     pub game_version: String,
     pub loader_version: Option<String>,
 }
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ModInfo {
     pub name: String,
     pub id: String,
@@ -86,4 +86,14 @@ pub fn get_config() -> Result<MCXConfig> {
     // })
     // let file_data = fs::read_to_string
     Ok(conf)
+}
+
+pub fn remove_mod(id: &str) -> Result<()> {
+    let mut current_conf = get_config()?;
+    if let Some(mods) = &mut current_conf.mods {
+        mods.retain(|v| id != v.id);
+    }
+    println!("{current_conf:#?}");
+    write_config(current_conf)?;
+    Ok(())
 }
