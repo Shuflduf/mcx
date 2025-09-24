@@ -21,8 +21,8 @@ pub fn handle_command(command: ModSubcommand) -> Result<()> {
 }
 
 pub fn download_mod_jar(url: &str, name: &str) -> Result<()> {
-    println!("TEMP DISABLED");
-    return Ok(());
+    // println!("TEMP DISABLED");
+    // return Ok(());
     fs::create_dir_all("mods")?;
     let mut new_mod_file = File::create(format!("mods/{name}.jar"))?;
     new_mod_file.write_all(&reqwest::blocking::get(url)?.bytes()?)?;

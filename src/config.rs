@@ -7,8 +7,6 @@ use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::mods;
-
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub enum LoaderName {
     Vanilla,

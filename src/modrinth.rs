@@ -1,5 +1,5 @@
 use crate::{
-    config::{self, LoaderName, MCXConfig, ModInfo},
+    config::{self, LoaderName, ModInfo},
     mods,
 };
 use chrono::{DateTime, Utc};
@@ -62,10 +62,7 @@ pub fn update_all_mods() -> Result<()> {
         if mod_versions[0].date_published <= target_mod.version_date {
             continue;
         }
-        println!(
-            "NEW {} > {}",
-            mod_versions[0].date_published, target_mod.version_date
-        );
+        println!("  {} {}", "Updating".bold().green(), target_mod.name);
         // this doesnt do deps stuff and i think it should
         mods::download_mod_jar(&mod_versions[0].files[0].url, &target_mod.id)?;
         config::update_mod(&target_mod.id, &mod_versions[0].date_published)?;
