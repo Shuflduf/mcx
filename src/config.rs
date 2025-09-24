@@ -28,9 +28,9 @@ pub struct ModInfo {
     pub version_date: DateTime<Utc>,
 }
 #[derive(Debug, Deserialize, Serialize)]
-struct MCXConfig {
-    version_info: VersionInfo,
-    mods: Option<Vec<ModInfo>>,
+pub struct MCXConfig {
+    pub version_info: VersionInfo,
+    pub mods: Option<Vec<ModInfo>>,
 }
 
 fn write_config(config: MCXConfig) -> Result<()> {
@@ -67,12 +67,17 @@ pub fn create_config(version_info: VersionInfo) -> Result<()> {
     Ok(())
 }
 
-fn get_config() -> Result<MCXConfig> {
+pub fn verify_config() -> Result<()> {
     if !fs::exists("mcx.toml").is_ok_and(|b| b) {
         return Err(eyre!(
             "mcx.toml not found. Create a new server by running `mcx init`."
         ));
     }
+    Ok(())
+}
+
+pub fn get_config() -> Result<MCXConfig> {
+    verify_config()?;
     let file_contents = fs::read_to_string("mcx.toml")?;
     let conf: MCXConfig = toml::from_str(&file_contents)?;
     // Ok(MCXConfig {
