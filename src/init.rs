@@ -1,4 +1,4 @@
-use std::{fs::File, io::copy};
+use std::{fs::File, io::Write};
 
 use crate::loaders;
 use color_eyre::eyre::Result;
@@ -11,14 +11,13 @@ pub fn setup_server() -> Result<()> {
     .prompt()?;
     let mut loader = loaders::from_name(loader_name);
     loader.setup_versions()?;
-    // loader.download_server_jar()?;
-    println!("JAR DOWNLOADING TEMP DISABLED");
+    loader.download_server_jar()?;
+    // println!("JAR DOWNLOADING TEMP DISABLED");
     Ok(())
 }
 
 pub fn download_server_file(url: String) -> Result<()> {
-    let mut response = reqwest::blocking::get(url)?;
-    let mut file = File::create("server.jar")?;
-    copy(&mut response, &mut file)?;
+    let mut server_file = File::create("server.jar")?;
+    server_file.write_all(&reqwest::blocking::get(url)?.bytes()?)?;
     Ok(())
 }
