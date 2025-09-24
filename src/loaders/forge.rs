@@ -37,7 +37,6 @@ impl MCLoader for ForgeLoader {
             "https://maven.minecraftforge.net/net/minecraftforge/forge/{}-{}/forge-{}-{}-installer.jar",
             self.game_version, self.loader_version, self.game_version, self.loader_version
         );
-        println!("{jar_url}");
         init::download_server_file(jar_url)?;
         Ok(())
     }

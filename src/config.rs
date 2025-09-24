@@ -7,13 +7,24 @@ use chrono::{DateTime, Utc};
 use color_eyre::eyre::{eyre, Result};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub enum LoaderName {
     Vanilla,
     Fabric,
     Forge,
-    NeoForge,
+    Neoforge,
     Quilt,
+    // wtf territory
+    Babric,
+    BTABabric,
+    JavaAgent,
+    LegacyFabric,
+    Liteloader,
+    Modloader,
+    Nilloader,
+    Ornithe,
+    Rift,
 }
 #[derive(Debug, Deserialize, Serialize)]
 pub struct VersionInfo {

@@ -22,7 +22,7 @@ impl MCLoader for NeoforgeLoader {
         )
         .prompt()?;
         config::create_config(VersionInfo {
-            name: config::LoaderName::NeoForge,
+            name: config::LoaderName::Neoforge,
             game_version: self.game_version.clone(),
             loader_version: Some(self.loader_version.clone()),
         })?;

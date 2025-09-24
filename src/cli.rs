@@ -22,6 +22,8 @@ pub enum ModSubcommand {
 pub enum Command {
     /// Initialize a new Minecraft server
     Init,
+    /// Initialize a new server from a Modrinth modpack id
+    Pack { id: String },
     /// Run the Minecraft server
     Run,
     /// Manage mods for your Minecraft server

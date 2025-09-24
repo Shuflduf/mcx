@@ -26,7 +26,7 @@ pub fn download_mod_jar(url: &str, name: &str) -> Result<()> {
     fs::create_dir_all("mods")?;
     let mut new_mod_file = File::create(format!("mods/{name}.jar"))?;
     new_mod_file.write_all(&reqwest::blocking::get(url)?.bytes()?)?;
-    println!("{url}, {name}");
+    // println!("{url}, {name}");
     Ok(())
 }
 
