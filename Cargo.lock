@@ -903,7 +903,7 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "mcx"
-version = "2.0.0"
+version = "2.0.2"
 dependencies = [
  "chrono",
  "clap",
