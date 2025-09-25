@@ -34,7 +34,7 @@ Run the following command to install the binary directly from [crates.io](https:
 ```sh
 cargo install mcx
 ```
-Or if you have `binstall`:
+Or if you have `binstall` (actually idk if this works):
 ```sh
 cargo binstall mcx
 ```
