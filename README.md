@@ -2,16 +2,14 @@
 A new and simple way to manage [Minecraft](https://www.minecraft.net/) servers!
 
 # Features
-- Create a Vanilla server
-- Create a NeoForge server
+- Create a Vanilla, Fabric, Forge, or Neoforge server
 - Run any server
 - Download mods
 - Server console
 
 # Planned
-- Fabric, Forge, and Quilt servers
+- Quilt servers
 - Paper, Spigot, and other plugin software
-- Add mods with name
 - Better mod management
 - World management
 - Changing server options
@@ -19,12 +17,14 @@ A new and simple way to manage [Minecraft](https://www.minecraft.net/) servers!
 
 # Commands
 `mcx` - Entry point for all other commands.
-- `init` - Create a Minecraft server. You can choose the loader as well as the version
-- `mod` - Shows the help menu for mods  
-  - `add [URL]` - Adds a mod from the URL. Needs a direct download link
-  - `add [MOD_ID]` - Adds a mod from the mod ID. Find the mod ID in the URL on the Modrinth website.
-  For example, the mod ID for [NeoTech](https://modrinth.com/mod/neotech) is `neotech`
-  - `list` - Lists all installed mods on the server
+- `init` - Initialize a new Minecraft server
+- `pack [ID]` - Initialize a new server from a Modrinth modpack id
+- `run` - Run the Minecraft server
+- `mod` - Manage mods for your Minecraft server
+  - `add [ID]` - Add a mod from Modrinth by mod id
+  - `list` - List downloaded mods
+  - `update` - Update all mods added from Modrinth
+  - `remove [ID]` - Remove a mod added from Modrinth
 
 # Installation
 ## Installing from GitHub
@@ -34,4 +34,7 @@ Run the following command to install the binary directly from [crates.io](https:
 ```sh
 cargo install mcx
 ```
-Or,
+Or if you have `binstall`:
+```sh
+cargo binstall mcx
+```

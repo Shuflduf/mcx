@@ -118,6 +118,15 @@ jobs:
           tag_name: v${{ needs.check-version.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  binstall-release:
+    needs: [build-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build and upload binstall artifacts
+        uses: cargo-bins/cargo-binstall-release@v1
+
   publish-crate:
     needs: [check-version, build-and-release]
     if: needs.check-version.outputs.should_release == 'true'
